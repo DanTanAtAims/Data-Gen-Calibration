@@ -1,3 +1,9 @@
+"""
+Calculate the mean and standard deviation for wave statistics (ub, hs, tp), bathymetry,
+and turbidity.
+"""
+
+
 include("../common.jl")
 
 using ADRIA, Rasters
@@ -6,10 +12,27 @@ import GeoDataFrames as GDF
 import GeoFormatTypes as GFT
 import ArchGDAL as AG
 
-using Statistics
+using CSV, DataFrames, Statistics
 
-dom = ADRIA.load_domain(RMEDomain, RME_DOMAIN_DIR, "45")
+"""
+    clean_and_combine_vectors(clean, unclean)
 
+Remove Nan and Missing Values from unclean vector and add to clean vector.
+"""
+function clean_and_combine_vectors(clean, unclean)
+    unclean[ismissing.(unclean)] .= 0
+    unclean[isnan.(unclean)] .= 0
+    clean += unclean
+    return clean
+end
+
+"""
+    calc_stats(slps, flts, habitable, var_rast, dom)
+
+Calculate the mean and standard deviation of a given variable at each polygon in the domain.
+Furthermore, calculate the mean and standard deviation for the slope and flats.
+Geomorphologies are masked by habitability.
+"""
 function calc_stats(slps, flts, habitable, var_rast, dom)
     var_habitable  = Rasters.mask(var_rast; with=habitable, boundary=:touches, progress=false)
     var_slopes     = Rasters.mask(var_habitable; with=slps, boundary=:touches, progress=false)
@@ -27,6 +50,11 @@ function calc_stats(slps, flts, habitable, var_rast, dom)
     return var_flats_mean, var_flats_std, var_slope_mean, var_slope_std, var_mean, var_std
 end
 
+"""
+    total_aggregation(x, y)
+
+Add two vectors togethor, setting missing values to 0.
+"""
 function total_aggregation(x, y)
     if ismissing(x) && ismissing(y)
         return 1.0
@@ -39,6 +67,11 @@ function total_aggregation(x, y)
     end
 end
 
+"""
+    slope_flat_prop(slps, flts, habitable, one_rast, dom)
+
+Calculate the proportion of polygon covered by habitable slope and flats.
+"""
 function slope_flat_prop(slps, flts, habitable, one_rast, dom)
     one_habitable = Rasters.mask(one_rast; with=habitable, boundary=:touches, progress=false)
     one_slopes = Rasters.mask(one_habitable; with=slps, bounary=:touches, progress=false)
@@ -51,60 +84,37 @@ function slope_flat_prop(slps, flts, habitable, one_rast, dom)
     return flt_count ./ total, slp_count ./ total
 end
 
+dom = ADRIA.load_domain(RMEDomain, RME_DOMAIN_DIR, "45")
+
+var_names = [
+    "ub_", # wave
+    "hs_", # wave
+    "tp_", # wave
+    "bathy_",
+    "turbid_"
+]
+
+geomorphic_names = [
+    "",
+    "slp_", # slope
+    "flt_" # flat
+]
+
+stat_names = [
+    "mean",
+    "std"
+]
+
+df_columns = []
+for v in var_names, g in geomorphic_names, s in stat_names
+    push!(df_columns, Symbol(g * v * s))
+end
+push!(df_columns, :slp_prop)
+push!(df_columns, :flt_prop)
+
+res = DataFrame(zeros(Float64, 3806, 32), df_columns)
 # wave UB
-ub_mean::Vector{Float64} = zeros(Float64, 3806)
-ub_std::Vector{Float64}  = zeros(Float64, 3806)
-
-slp_ub_mean::Vector{Float64} = zeros(Float64, 3806)
-slp_ub_std::Vector{Float64}  = zeros(Float64, 3806)
-
-flt_ub_mean::Vector{Float64} = zeros(Float64, 3806)
-flt_ub_std::Vector{Float64}  = zeros(Float64, 3806)
-
-# wave HS
-hs_mean::Vector{Float64} = zeros(Float64, 3806)
-hs_std::Vector{Float64}  = zeros(Float64, 3806)
-
-slp_hs_mean::Vector{Float64} = zeros(Float64, 3806)
-slp_hs_std::Vector{Float64}  = zeros(Float64, 3806)
-
-flt_hs_mean::Vector{Float64} = zeros(Float64, 3806)
-flt_hs_std::Vector{Float64}  = zeros(Float64, 3806)
-
-# wave Tp
-tp_mean::Vector{Float64} = zeros(Float64, 3806)
-tp_std::Vector{Float64}  = zeros(Float64, 3806)
-
-slp_tp_mean::Vector{Float64} = zeros(Float64, 3806)
-slp_tp_std::Vector{Float64}  = zeros(Float64, 3806)
-
-flt_tp_mean::Vector{Float64} = zeros(Float64, 3806)
-flt_tp_std::Vector{Float64}  = zeros(Float64, 3806)
-
-# Bathymetry
-bathy_mean::Vector{Float64} = zeros(Float64, 3806)
-bathy_std::Vector{Float64}  = zeros(Float64, 3806)
-
-slp_bathy_mean::Vector{Float64} = zeros(Float64, 3806)
-slp_bathy_std::Vector{Float64}  = zeros(Float64, 3806)
-
-flt_bathy_mean::Vector{Float64} = zeros(Float64, 3806)
-flt_bathy_std::Vector{Float64}  = zeros(Float64, 3806)
-
-# Turbidity
-turbid_mean::Vector{Float64} = zeros(Float64, 3806)
-turbid_std::Vector{Float64}  = zeros(Float64, 3806)
-
-slp_turbid_mean::Vector{Float64} = zeros(Float64, 3806)
-slp_turbid_std::Vector{Float64}  = zeros(Float64, 3806)
-
-flt_turbid_mean::Vector{Float64} = zeros(Float64, 3806)
-flt_turbid_std::Vector{Float64}  = zeros(Float64, 3806)
-
-slp_prop::Vector{Float64} = zeros(Float64, 3806)
-flt_prop::Vector{Float64} = zeros(Float64, 3806)
-
-for reg_idx in 1:length(REGIONS)
+for (reg_idx, reg) in enumerate(REGIONS)
     @info "Processing $(reg)"
     slopes_fn  = SLOPE_FNS[reg_idx]
     flats_fn   = FLAT_FNS[reg_idx]
@@ -131,141 +141,53 @@ for reg_idx in 1:length(REGIONS)
 
     @info "Processing $(reg): proportions"
     f_mean, s_mean = slope_flat_prop(slopes, flats, habitable_mask, raster_ones, dom)
-    slp_prop .= clean_and_combine_vectors(slp_prop, s_mean)
-    flt_prop .= clean_and_combine_vectors(flt_prop, f_mean)
+    res.slp_prop .= clean_and_combine_vectors(res.slp_prop, s_mean)
+    res.flt_prop .= clean_and_combine_vectors(res.flt_prop, f_mean)
 
     @info "Processing $(reg): waves_ub"
     f_mean, f_std, s_mean, s_std, mn, st = calc_stats(slopes, flats, habitable_mask, waves_ub, dom)
-    ub_mean     .= clean_and_combine_vectors(ub_mean, mn)
-    ub_std      .= clean_and_combine_vectors(ub_std,  st)
-    slp_ub_mean .= clean_and_combine_vectors(slp_ub_mean, s_mean)
-    slp_ub_std  .= clean_and_combine_vectors(slp_ub_std,  s_std)
-    flt_ub_mean .= clean_and_combine_vectors(flt_ub_mean, f_mean)
-    flt_ub_std  .= clean_and_combine_vectors(flt_ub_std,  f_std)
+    res.ub_mean     .= clean_and_combine_vectors(res.ub_mean, mn)
+    res.ub_std      .= clean_and_combine_vectors(res.ub_std,  st)
+    res.slp_ub_mean .= clean_and_combine_vectors(res.slp_ub_mean, s_mean)
+    res.slp_ub_std  .= clean_and_combine_vectors(res.slp_ub_std,  s_std)
+    res.flt_ub_mean .= clean_and_combine_vectors(res.flt_ub_mean, f_mean)
+    res.flt_ub_std  .= clean_and_combine_vectors(res.flt_ub_std,  f_std)
 
     @info "Processing $(reg): waves_hs"
     f_mean, f_std, s_mean, s_std, mn, st = calc_stats(slopes, flats, habitable_mask, waves_hs, dom)
-    hs_mean     .= clean_and_combine_vectors(hs_mean, mn)
-    hs_std      .= clean_and_combine_vectors(hs_std,  st)
-    slp_hs_mean .= clean_and_combine_vectors(slp_hs_mean, s_mean)
-    slp_hs_std  .= clean_and_combine_vectors(slp_hs_std,  s_std)
-    flt_hs_mean .= clean_and_combine_vectors(flt_hs_mean, f_mean)
-    flt_hs_std  .= clean_and_combine_vectors(flt_hs_std,  f_std)
+    res.hs_mean     .= clean_and_combine_vectors(res.hs_mean, mn)
+    res.hs_std      .= clean_and_combine_vectors(res.hs_std,  st)
+    res.slp_hs_mean .= clean_and_combine_vectors(res.slp_hs_mean, s_mean)
+    res.slp_hs_std  .= clean_and_combine_vectors(res.slp_hs_std,  s_std)
+    res.flt_hs_mean .= clean_and_combine_vectors(res.flt_hs_mean, f_mean)
+    res.flt_hs_std  .= clean_and_combine_vectors(res.flt_hs_std,  f_std)
 
     @info "Processing $(reg): waves_tp"
     f_mean, f_std, s_mean, s_std, mn, st = calc_stats(slopes, flats, habitable_mask, waves_tp, dom)
-    tp_mean .= clean_and_combine_vectors(tp_mean, mn)
-    tp_std  .= clean_and_combine_vectors(tp_std,  st)
-    slp_tp_mean .= clean_and_combine_vectors(slp_tp_mean, s_mean)
-    slp_tp_std  .= clean_and_combine_vectors(slp_tp_std,  s_std)
-    flt_tp_mean .= clean_and_combine_vectors(flt_tp_mean, f_mean)
-    flt_tp_std  .= clean_and_combine_vectors(flt_tp_std,  f_std)
+    res.tp_mean .= clean_and_combine_vectors(res.tp_mean, mn)
+    res.tp_std  .= clean_and_combine_vectors(res.tp_std,  st)
+    res.slp_tp_mean .= clean_and_combine_vectors(res.slp_tp_mean, s_mean)
+    res.slp_tp_std  .= clean_and_combine_vectors(res.slp_tp_std,  s_std)
+    res.flt_tp_mean .= clean_and_combine_vectors(res.flt_tp_mean, f_mean)
+    res.flt_tp_std  .= clean_and_combine_vectors(res.flt_tp_std,  f_std)
 
     @info "Processing $(reg): bathy"
     f_mean, f_std, s_mean, s_std, mn, st = calc_stats(slopes, flats, habitable_mask, bathy, dom)
-    bathy_mean .= clean_and_combine_vectors(bathy_mean, mn)
-    bathy_std  .= clean_and_combine_vectors(bathy_std,  st)
-    slp_bathy_mean .= clean_and_combine_vectors(slp_bathy_mean, s_mean)
-    slp_bathy_std  .= clean_and_combine_vectors(slp_bathy_std,  s_std)
-    flt_bathy_mean .= clean_and_combine_vectors(flt_bathy_mean, f_mean)
-    flt_bathy_std  .= clean_and_combine_vectors(flt_bathy_std,  f_std)
+    res.bathy_mean .= clean_and_combine_vectors(res.bathy_mean, mn)
+    res.bathy_std  .= clean_and_combine_vectors(res.bathy_std,  st)
+    res.slp_bathy_mean .= clean_and_combine_vectors(res.slp_bathy_mean, s_mean)
+    res.slp_bathy_std  .= clean_and_combine_vectors(res.slp_bathy_std,  s_std)
+    res.flt_bathy_mean .= clean_and_combine_vectors(res.flt_bathy_mean, f_mean)
+    res.flt_bathy_std  .= clean_and_combine_vectors(res.flt_bathy_std,  f_std)
 
     @info "Processing $(reg): turbid"
     f_mean, f_std, s_mean, s_std, mn, st = calc_stats(slopes, flats, habitable_mask, turbid, dom)
-    turbid_mean .= clean_and_combine_vectors(turbid_mean, mn)
-    turbid_std  .= clean_and_combine_vectors(turbid_std,  st)
-    slp_turbid_mean .= clean_and_combine_vectors(slp_turbid_mean, s_mean)
-    slp_turbid_std  .= clean_and_combine_vectors(slp_turbid_std,  s_std)
-    flt_turbid_mean .= clean_and_combine_vectors(flt_turbid_mean, f_mean)
-    flt_turbid_std  .= clean_and_combine_vectors(flt_turbid_std,  f_std)
+    res.turbid_mean .= clean_and_combine_vectors(res.turbid_mean, mn)
+    res.turbid_std  .= clean_and_combine_vectors(res.turbid_std,  st)
+    res.slp_turbid_mean .= clean_and_combine_vectors(res.slp_turbid_mean, s_mean)
+    res.slp_turbid_std  .= clean_and_combine_vectors(res.slp_turbid_std,  s_std)
+    res.flt_turbid_mean .= clean_and_combine_vectors(res.flt_turbid_mean, f_mean)
+    res.flt_turbid_std  .= clean_and_combine_vectors(res.flt_turbid_std,  f_std)
 end
 
-# Visualise Distributions
-using WGLMakie, GeoMakie, GraphMakie
-
-f = Figure(; size=(1600, 1600))
-
-# wave hs
-var_name = "wave Ub"
-col = :blue
-Axis(f[1, 1]; xlabel=var_name, ylabel="location count", title="slope $(var_name) mean")
-hist!(slp_ub_mean; strokewidth=1, strokecolor=:black, color=col)
-Axis(f[1, 2]; xlabel=var_name, ylabel="location count", title="flats $(var_name) mean")
-hist!(flt_ub_mean; strokewidth=1, strokecolor=:black, color=col)
-Axis(f[2, 1]; xlabel=var_name, ylabel="location count", title="slope $(var_name) standard deviation")
-hist!(slp_ub_std; strokewidth=1, strokecolor=:black, color=col)
-Axis(f[2, 2]; xlabel=var_name, ylabel="location count", title="flats $(var_name) standard deviation")
-hist!(flt_ub_std; strokewidth=1, strokecolor=:black, color=col)
-
-# wave tp
-var_name = "wave Tp"
-col = :purple
-Axis(f[3, 1]; xlabel=var_name, ylabel="location count", title="slope $(var_name) mean")
-hist!(slp_tp_mean; strokewidth=1, strokecolor=:black, color=col)
-Axis(f[3, 2]; xlabel=var_name, ylabel="location count", title="flats $(var_name) mean")
-hist!(flt_tp_mean; strokewidth=1, strokecolor=:black, color=col)
-Axis(f[4, 1]; xlabel=var_name, ylabel="location count", title="slope $(var_name) standard deviation")
-hist!(slp_tp_std; strokewidth=1, strokecolor=:black, color=col)
-Axis(f[4, 2]; xlabel=var_name, ylabel="location count", title="flats $(var_name) standard deviation")
-hist!(flt_tp_std; strokewidth=1, strokecolor=:black, color=col)
-
-# Bathy
-var_name = "Bathy"
-col = :red
-Axis(f[1, 3]; xlabel=var_name, ylabel="location count", title="slope $(var_name) mean")
-hist!(slp_bathy_mean; strokewidth=1, strokecolor=:black, color=col)
-Axis(f[1, 4]; xlabel=var_name, ylabel="location count", title="flats $(var_name) mean")
-hist!(flt_bathy_mean; strokewidth=1, strokecolor=:black, color=col)
-Axis(f[2, 3]; xlabel=var_name, ylabel="location count", title="slope $(var_name) standard deviation")
-hist!(slp_bathy_std; strokewidth=1, strokecolor=:black, color=col)
-Axis(f[2, 4]; xlabel=var_name, ylabel="location count", title="flats $(var_name) standard deviation")
-hist!(flt_bathy_std; strokewidth=1, strokecolor=:black, color=col)
-
-# Turbid
-var_name = "Turbid"
-col = :orange
-Axis(f[3, 3]; xlabel=var_name, ylabel="location count", title="slope $(var_name) mean")
-hist!(slp_turbid_mean; strokewidth=1, strokecolor=:black, color=col)
-Axis(f[3, 4]; xlabel=var_name, ylabel="location count", title="flats $(var_name) mean")
-hist!(flt_turbid_mean; strokewidth=1, strokecolor=:black, color=col)
-Axis(f[4, 3]; xlabel=var_name, ylabel="location count", title="slope $(var_name) standard deviation")
-hist!(slp_turbid_std; strokewidth=1, strokecolor=:black, color=col)
-Axis(f[4, 4]; xlabel=var_name, ylabel="location count", title="flats $(var_name) standard deviation")
-hist!(flt_turbid_std; strokewidth=1, strokecolor=:black, color=col)
-
-using CSV, DataFrames
-
-res = DataFrame(
-    ub_mean=ub_mean,
-    ub_std=ub_std,
-    slp_ub_mean=slp_ub_mean,
-    slp_ub_std=slp_ub_std,
-    flt_ub_mean=flt_ub_mean,
-    flt_ub_std=flt_ub_std,
-    hs_mean=hs_mean,
-    hs_std=hs_std,
-    slp_hs_mean=slp_hs_mean,
-    slp_hs_std=slp_hs_std,
-    flt_hs_mean=flt_hs_mean,
-    flt_hs_std=flt_hs_std,
-    tp_mean=tp_mean,
-    tp_std=tp_std,
-    slp_tp_mean=slp_tp_mean,
-    slp_tp_std=slp_tp_std,
-    flt_tp_mean=flt_tp_mean,
-    flt_tp_std=flt_tp_std,
-    bathy_mean=bathy_mean,
-    bathy_std=bathy_std,
-    slp_bathy_mean=slp_bathy_mean,
-    slp_bathy_std=slp_bathy_std,
-    flt_bathy_mean=flt_bathy_mean,
-    flt_bathy_std=flt_bathy_std,
-    turbid_mean=turbid_mean,
-    turbid_std=turbid_std,
-    slp_turbid_mean=slp_turbid_mean,
-    slp_turbid_std=slp_turbid_std,
-    flt_turbid_mean=flt_turbid_mean,
-    flt_turbid_std=flt_turbid_std,
-    slp_prop=slp_prop,
-    flt_prop=flt_prop
-)
+CSV.write(res, "../../Outputs/result_csv")
