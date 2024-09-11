@@ -9,6 +9,9 @@ end
 # Location Classification Paths
 LOC_CLASS_CONFIG = config_toml["Location_Classification"]
 
+assert_config_key_exists(LOC_CLASS_CONFIG, "aca_geospatial_dir")
+assert_config_key_exists(LOC_CLASS_CONFIG, "mpa_geospatial_dir")
+
 # ACA data is only used for slope and flat categorisation
 ACA_GEOSPATIAL_DIR = LOC_CLASS_CONFIG["aca_geospatial_dir"]
 # MPA data is used for all other geospatial data
@@ -50,15 +53,15 @@ TURBID_FNS   = [
     joinpath(MPA_GEOSPATIAL_DIR, reg * "_turbid.tif")   for reg in REGIONS
 ]
 
-# Validating Loccation Classification File Names
-function assert_file_exist(filepath::String)::Nothing
-    @assert isfile(filepath) "File: $(filepath) does not exist."
-    return nothing
-end
-
 assert_file_exist.(SLOPE_FNS)
 assert_file_exist.(FLAT_FNS)
 assert_file_exist.(BENTHIC_FNS)
 assert_file_exist.(WAVES_UB_FNS)
 assert_file_exist.(BATHY_FNS)
 assert_file_exist.(TURBID_FNS)
+
+assert_config_key_exists(LOC_CLASS_CONFIG, "outer_shelf_gpkg")
+assert_config_key_exists(LOC_CLASS_CONFIG, "inner_shelf_gpkg")
+
+OUTER_SHELF_GPKG = LOC_CLASS_CONFIG["outer_shelf_gpkg"]
+INNER_SHELF_GPKG = LOC_CLASS_CONFIG["inner_shelf_gpkg"]

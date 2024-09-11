@@ -1,5 +1,17 @@
 using TOML
 
+function assert_file_exist(filepath::String)::Nothing
+    @assert isfile(filepath) "File: $(filepath) does not exist."
+    return nothing
+end
+
+function assert_config_key_exists(config_dict, key)::Nothing
+    msg  = "Configuration key: $(key) does not exist."
+    msg *= " Check that all required file paths are provided."
+    @assert haskey(config_dict, key)
+    return nothing
+end
+
 config_fn = joinpath(@__DIR__, "../config.toml")
 if !isfile(config_fn)
     throw(ArgumentError(

@@ -1,3 +1,5 @@
+include("common.jl")
+
 using ADRIA
 using ADRIA: GDF
 
@@ -5,26 +7,25 @@ using CSV, DataFrames
 
 import ArchGDAL as AG
 
-outer_shelf_fn = "C:\\Users\\dtan\\Documents\\outer_shelfs.gpkg"
-inner_shelf_fn = "C:\\Users\\dtan\\Documents\\inner_shelf_difference.gpkg"
+# Data Loading
+inner_shelf = GDF.read(INNER_SHELF_GPKG)
+outer_shelf = GDF.read(OUTER_SHELF_GPKG)
 
-inner_shelf = GDF.read(inner_shelf_fn)
-outer_shelf = GDF.read(outer_shelf_fn)
-
+# Domain loading can be slow. Only load domain if it is not already loaded.
 if !isdefined(Main, :dom)
     dom = ADRIA.load_domain(RMEDomain, "C:\\Users\\dtan\\repos\\rme_ml_2024_01_08", "45")
 end
 
-features_fn = "C:\\Users\\dtan\\repos\\ADRIA.jl\\sandbox\\raster\\result_habitable_MPA.csv"
+features = CSV.read(OUTPUT_CSV, DataFrame)
 
-features = CSV.read(features_fn, DataFrame)
+# Data Transformations
+@info "Classifying ltmp and shelf regions."
 
 centroids = AG.centroid.(dom.site_data.geom)
 
 function contained_in(polys,centroid)::Bool
     return any([AG.contains(p, centroid) for p in polys])
 end
-
 inner_loc = [contained_in(inner_shelf.geom, cent) for cent in centroids]
 outer_loc = [contained_in(outer_shelf.geom, cent) for cent in centroids]
 
