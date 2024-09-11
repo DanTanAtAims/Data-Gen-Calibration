@@ -4,7 +4,7 @@ and turbidity.
 """
 
 
-include("../common.jl")
+include("common.jl")
 
 using ADRIA, Rasters
 
@@ -127,22 +127,21 @@ for (reg_idx, reg) in enumerate(REGIONS)
     habitable_mask = benthic[benthic.class .!= "Sand", :]
 
     waves_ub_fn = WAVES_UB_FNS[reg_idx]
+    waves_hs_fn = WAVES_HS_FNS[reg_idx]
+    waves_tp_fn = WAVES_TP_FNS[reg_idx]
     bathy_fn    = BATHY_FNS[reg_idx]
     turbid_fn   = TURBID_FNS[reg_idx]
 
     waves_ub = Raster(waves_ub_fn; lazy=true)
-    waves_hs = Raster(waves_hs_fn; lazy=true)
-    waves_tp = Raster(waves_tp_fn; lazy=true)
-    bathy    = Raster(bathy_fn;    lazy=true)
-    turbid   = Raster(turbid_fn;   lazy=true)
-
-    raster_ones = copy(waves_hs)
+    raster_ones = copy(waves_ub)
     raster_ones .= 1
 
     @info "Processing $(reg): proportions"
     f_mean, s_mean = slope_flat_prop(slopes, flats, habitable_mask, raster_ones, dom)
     res.slp_prop .= clean_and_combine_vectors(res.slp_prop, s_mean)
     res.flt_prop .= clean_and_combine_vectors(res.flt_prop, f_mean)
+    raster_ones = nothing
+    GC.gc()
 
     @info "Processing $(reg): waves_ub"
     f_mean, f_std, s_mean, s_std, mn, st = calc_stats(slopes, flats, habitable_mask, waves_ub, dom)
@@ -152,8 +151,11 @@ for (reg_idx, reg) in enumerate(REGIONS)
     res.slp_ub_std  .= clean_and_combine_vectors(res.slp_ub_std,  s_std)
     res.flt_ub_mean .= clean_and_combine_vectors(res.flt_ub_mean, f_mean)
     res.flt_ub_std  .= clean_and_combine_vectors(res.flt_ub_std,  f_std)
+    waves_ub = nothing
+    GC.gc()
 
     @info "Processing $(reg): waves_hs"
+    waves_hs = Raster(waves_hs_fn; lazy=true)
     f_mean, f_std, s_mean, s_std, mn, st = calc_stats(slopes, flats, habitable_mask, waves_hs, dom)
     res.hs_mean     .= clean_and_combine_vectors(res.hs_mean, mn)
     res.hs_std      .= clean_and_combine_vectors(res.hs_std,  st)
@@ -161,8 +163,11 @@ for (reg_idx, reg) in enumerate(REGIONS)
     res.slp_hs_std  .= clean_and_combine_vectors(res.slp_hs_std,  s_std)
     res.flt_hs_mean .= clean_and_combine_vectors(res.flt_hs_mean, f_mean)
     res.flt_hs_std  .= clean_and_combine_vectors(res.flt_hs_std,  f_std)
+    waves_hs = nothing
+    GC.gc()
 
     @info "Processing $(reg): waves_tp"
+    waves_tp = Raster(waves_tp_fn; lazy=true)
     f_mean, f_std, s_mean, s_std, mn, st = calc_stats(slopes, flats, habitable_mask, waves_tp, dom)
     res.tp_mean .= clean_and_combine_vectors(res.tp_mean, mn)
     res.tp_std  .= clean_and_combine_vectors(res.tp_std,  st)
@@ -170,8 +175,11 @@ for (reg_idx, reg) in enumerate(REGIONS)
     res.slp_tp_std  .= clean_and_combine_vectors(res.slp_tp_std,  s_std)
     res.flt_tp_mean .= clean_and_combine_vectors(res.flt_tp_mean, f_mean)
     res.flt_tp_std  .= clean_and_combine_vectors(res.flt_tp_std,  f_std)
+    waves_tp = nothing
+    GC.gc()
 
     @info "Processing $(reg): bathy"
+    bathy    = Raster(bathy_fn;    lazy=true)
     f_mean, f_std, s_mean, s_std, mn, st = calc_stats(slopes, flats, habitable_mask, bathy, dom)
     res.bathy_mean .= clean_and_combine_vectors(res.bathy_mean, mn)
     res.bathy_std  .= clean_and_combine_vectors(res.bathy_std,  st)
@@ -179,8 +187,11 @@ for (reg_idx, reg) in enumerate(REGIONS)
     res.slp_bathy_std  .= clean_and_combine_vectors(res.slp_bathy_std,  s_std)
     res.flt_bathy_mean .= clean_and_combine_vectors(res.flt_bathy_mean, f_mean)
     res.flt_bathy_std  .= clean_and_combine_vectors(res.flt_bathy_std,  f_std)
+    bathy = nothing
+    GC.gc()
 
     @info "Processing $(reg): turbid"
+    turbid   = Raster(turbid_fn;   lazy=true)
     f_mean, f_std, s_mean, s_std, mn, st = calc_stats(slopes, flats, habitable_mask, turbid, dom)
     res.turbid_mean .= clean_and_combine_vectors(res.turbid_mean, mn)
     res.turbid_std  .= clean_and_combine_vectors(res.turbid_std,  st)
@@ -188,6 +199,8 @@ for (reg_idx, reg) in enumerate(REGIONS)
     res.slp_turbid_std  .= clean_and_combine_vectors(res.slp_turbid_std,  s_std)
     res.flt_turbid_mean .= clean_and_combine_vectors(res.flt_turbid_mean, f_mean)
     res.flt_turbid_std  .= clean_and_combine_vectors(res.flt_turbid_std,  f_std)
+    turbid = nothing
+    GC.gc()
 end
 
-CSV.write(res, "../../Outputs/result_csv")
+CSV.write(OUTPUT_CSV, res)
