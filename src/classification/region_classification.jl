@@ -1,3 +1,17 @@
+"""
+For each ReefMod Location, idenfity the shelf position and ltmp region.
+
+# Shelf Position
+1 - Inner Shelf
+2 - Middle Shelf
+3 - Outer Shelf
+
+# LTMP Region
+1 - North
+2 - Central
+3 - South
+"""
+
 include("common.jl")
 
 using ADRIA
@@ -50,3 +64,6 @@ features[!,            :ltmp_region] .= 0.0
 features[north_mask,   :ltmp_region] .= 1.0
 features[central_mask, :ltmp_region] .= 2.0
 features[south_mask,   :ltmp_region] .= 3.0
+
+@info "Writing updated location data to $(OUTPUT_CSV)"
+CSV.write(OUTPUT_CSV, features)
