@@ -1,30 +1,14 @@
+"""
+Segment locations into classes and add classification to the output csv.
+"""
+
+include("common.jl")
+
 using ADRIA
-using WGLMakie, GeoMakie, GraphMakie
 
-using CSV, DataFrames
+using CSV, DataFrames, Statistics
 
-using Statistics
-
-features_fn = "raster/shelf_interpolated_results_MPA.csv"
-features = CSV.read(features_fn, DataFrame)
-
-function plot_var(df, var_name)
-    shelf_names = ["Inner", "Mid", "Outer"]
-    region_names = ["North", "Central", "South"]
-    f = Figure(; size=(900, 900))
-    for shelf_pos in 1:3
-        axs = []
-        for region in 1:3
-            loc_mask = df.shelf_position .== shelf_pos .&& df.ltmp_region .== region
-            ax = Axis(f[region, shelf_pos]; xlabel=String(var_name), ylabel="location count", title="$(region_names[region]), $(shelf_names[shelf_pos]), $(String(var_name))")
-            hist!(df[loc_mask, var_name]; strokewidth=1, strokecolor=:black)
-            push!(axs, ax)
-        end
-        linkxaxes!(axs...)
-    end
-    return f
-end
-
+features = CSV.read(OUTPUT_CSV, DataFrame)
 
 """
 The classification of locations is done using base 3.
@@ -40,7 +24,6 @@ add one after converting to base 3.
 bathy_bounds = quantile(features.bathy_mean, [0.66, 0.33])
 ub_bounds = quantile(features.ub_mean, [0.33, 0.66])
 turbid_bounds = quantile(features.turbid_mean, [0.33, 0.66])
-
 
 function interval_idx(elmt::Float64, intervals::Vector{Float64}; increasing::Bool=true)::Int64
     if increasing
@@ -67,5 +50,10 @@ function classify_location(df_row)::Int64
     return classification + 1
 end
 
+@info "Classifying Locations"
 features[!, :classification] .= classify_location.(eachrow(features))
+# Some classes contain no locations. New column gives consecutive class ids consecutive.
 features[!, :consecutive_classification] .= [findfirst(x -> x == class, unique(features.classification)) for class in features.classification]
+
+@info "Writing location classification to $(OUTPUT_CSV)"
+CSV.write(OUTPUT_CSV, features)
