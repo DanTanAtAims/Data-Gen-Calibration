@@ -1,0 +1,12 @@
+[Common]
+rme_domain_path = ""
+
+[Location_Classification]
+mpa_geospatial_dir = ""
+aca_geospatial_dir = ""
+outer_shelf_gpkg = ""
+inner_shelf_gpkg = ""
+
+[reefmod_loc_obs]
+canonical_gpkg_path = ""
+ltmp_manta_tow_path = ""
