@@ -9,4 +9,5 @@ inner_shelf_gpkg = ""
 
 [reefmod_loc_obs]
 canonical_gpkg_path = ""
+ltmp_vid_photo_path = ""
 ltmp_manta_tow_path = ""
