@@ -16,3 +16,7 @@ LTMP_MANTA_FN = REEFMOD_LOC_CONFIG["ltmp_manta_tow_path"]
 
 assert_file_exist(LTMP_PHOTO_FN)
 assert_file_exist(LTMP_MANTA_FN)
+
+assert_config_key_exists(REEFMOD_LOC_CONFIG, "canonical_gpkg_path")
+CANONICAL_GPKG_FN = REEFMOD_LOC_CONFIG["canonical_gpkg_path"]
+assert_file_exist(CANONICAL_GPKG_FN)

@@ -39,3 +39,8 @@ OUTPUT_CSV   = joinpath(OUTPUT_DIR, "location_classification.csv")
 # LTMP ReefMod Locations
 OUT_PHOTO_NETCDF = joinpath(OUTPUT_DIR, "ltmp_vid_photo.nc")
 OUT_MANTA_NETCDF = joinpath(OUTPUT_DIR, "ltmp_manta_tow.nc")
+
+OUT_RME_MANTA       = joinpath(OUTPUT_DIR, "ltmp_reefmod_manta.gpkg")
+OUT_RME_PHOTO       = joinpath(OUTPUT_DIR, "ltmp_reefmod_photo.gpkg")
+OUT_RME_PHOTO_HC    = joinpath(OUTPUT_DIR, "ltmp_reefmod_photo_hc.gpkg")
+OUT_RME_PHOTO_HC_SC = joinpath(OUTPUT_DIR, "ltmp_reefmod_photo_hc_sc.gpkg")

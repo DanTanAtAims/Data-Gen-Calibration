@@ -2,8 +2,8 @@ include("data_matching.jl")
 
 # Process ltmp data
 
-ltmp_data = CSV.read("$(DATA_DIR)AIMS_LTMP_hc_sc_a_by_site/ltmp_hc_sc_a_by_site/ltmp_hc_sc_a_by_site.csv", DataFrame)
-gd = groupby(ltmp_data, [:REEF_ID, :YEAR_CODE, :GROUP_CODE])
+ltmp_data = CSV.read(LTMP_PHOTO_FN, DataFrame)
+gd = DataFrames.groupby(ltmp_data, [:REEF_ID, :YEAR_CODE, :GROUP_CODE])
 ltmp_reef_level = combine(gd, [:LATITUDE, :LONGITUDE, :COVER] .=> mean)
 
 # Particular years have incorrect lon/lat at some REEF_IDs. Need to standardise them for later
@@ -31,7 +31,7 @@ ltmp_reef_level.GBRMPA_ID = Vector{Union{Missing, String}}(ltmp_reef_level.GBRMP
 ltmp_reef_level.REEF_ID = String.(ltmp_reef_level.REEF_ID)
 ltmp_reef_level.GROUP_CODE = String.(ltmp_reef_level.GROUP_CODE)
 
-GDF.write("output/ltmp_reef_level_mean_data.gpkg", ltmp_reef_level; crs=GFT.EPSG(4326))
+GDF.write(OUT_RME_PHOTO, ltmp_reef_level; crs=GFT.EPSG(4326))
 
 # Process ltmp-hard-coral cover data
 
@@ -46,12 +46,13 @@ end
 select!(ltmp_reef_hc, [:REEF_ID, :LATITUDE_mean, :LONGITUDE_mean, :COVER_mean, :YEAR, :geometry, :GBRMPA_ID, :RME_UNIQUE_ID])
 ltmp_reef_hc = unstack(ltmp_reef_hc, :YEAR, :COVER_mean)
 
-GDF.write("output/ltmp_reef_hard_cover_ts.gpkg", ltmp_reef_hc; crs=GFT.EPSG(4326))
+@info "Writing LTMP Photo Hard coral Observations At ReefMod Locations"
+GDF.write(OUT_RME_PHOTO_HC, ltmp_reef_hc; crs=GFT.EPSG(4326))
 
 
 # Process ltmp-total-cover data
 ltmp_hc_sc = ltmp_reef_level[ltmp_reef_level.GROUP_CODE .∈ [["Hard Coral", "Soft Coral"]], :]
-gdf = groupby(ltmp_hc_sc, [:REEF_ID, :YEAR_CODE, :LATITUDE_mean, :LONGITUDE_mean, :geometry, :GBRMPA_ID, :RME_UNIQUE_ID])
+gdf = DataFrames.groupby(ltmp_hc_sc, [:REEF_ID, :YEAR_CODE, :LATITUDE_mean, :LONGITUDE_mean, :geometry, :GBRMPA_ID, :RME_UNIQUE_ID])
 ltmp_hc_sc = combine(gdf, :COVER_mean .=> sum)
 
 ltmp_hc_sc.YEAR .= ""
@@ -64,4 +65,5 @@ end
 select!(ltmp_hc_sc, [:REEF_ID, :LATITUDE_mean, :LONGITUDE_mean, :COVER_mean_sum, :YEAR, :geometry, :GBRMPA_ID, :RME_UNIQUE_ID])
 ltmp_hc_sc = unstack(ltmp_hc_sc, :YEAR, :COVER_mean_sum)
 
-GDF.write("output/ltmp_reef_hard_and_soft_coral.gpkg", ltmp_hc_sc; crs=GFT.EPSG(4326))
+@info "Writing LTMP Photo Hard and Soft coral Observations At ReefMod Locations"
+GDF.write(OUT_RME_PHOTO_HC_SC, ltmp_hc_sc; crs=GFT.EPSG(4326))

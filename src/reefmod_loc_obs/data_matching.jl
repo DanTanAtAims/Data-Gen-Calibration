@@ -2,6 +2,8 @@
 Matching RME reef locations to the manta_tow_data survey results.
 """
 
+include("common.jl")
+
 using NetCDF, YAXArrays, CSV, DataFrames, ArchGDAL, Statistics
 import GeoDataFrames as GDF
 import GeoFormatTypes as GFT
@@ -125,6 +127,6 @@ function nonunique2(x::AbstractArray{T}) where T
 end
 
 # Insert directories for canonical-reefs geopackage and ltmp data directory.
-rme_reefs = GDF.read("../canonical-reefs/output/rrap_canonical_2024-07-24-T12-38-38.gpkg")
+rme_reefs = GDF.read(CANONICAL_GPKG_FN)
 
 DATA_DIR = "c:/Users/bgrier/Documents/Projects/ltmp_reefmod_comb/"
