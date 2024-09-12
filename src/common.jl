@@ -23,13 +23,6 @@ config_toml = TOML.parsefile(config_fn)
 
 COMMON_CONFIG    = config_toml["Common"]
 RME_DOMAIN_DIR   = COMMON_CONFIG["rme_domain_path"]
-# LOC_OBS_CONFIG   = config_toml["reefmod_loc_obs"]
-#
-# CANONICAL_GPKG_FN = LOC_OBS_CONFIG["canonical_gpkg_path"]
-# MANTA_TOW_FN      = LOC_OBS_CONFIG["ltmp_manta_tow_path"]
-#
-# assert_file_exist(CANONICAL_GPKG_FN)
-# assert_file_exist(MANTA_TOW_FN)
 
 OUTPUT_DIR = joinpath(@__DIR__, "..", "Outputs")
 @assert isdir(OUTPUT_DIR) "Output directory, $(OUTPUT_DIR), does not exist."
@@ -44,3 +37,6 @@ OUT_RME_MANTA       = joinpath(OUTPUT_DIR, "ltmp_reefmod_manta.gpkg")
 OUT_RME_PHOTO       = joinpath(OUTPUT_DIR, "ltmp_reefmod_photo.gpkg")
 OUT_RME_PHOTO_HC    = joinpath(OUTPUT_DIR, "ltmp_reefmod_photo_hc.gpkg")
 OUT_RME_PHOTO_HC_SC = joinpath(OUTPUT_DIR, "ltmp_reefmod_photo_hc_sc.gpkg")
+
+OUT_CLASS_MANTA    = joinpath(OUTPUT_DIR, "manta_tow_mean_std.nc")
+OUT_CLASS_PHOTO_HC = joinpath(OUTPUT_DIR, "ltmp_hard_mean_std.nc")
