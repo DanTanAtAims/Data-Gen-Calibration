@@ -1,3 +1,10 @@
+"""
+Perform reefmod location data matching on ltmp manta tow data.
+
+Written by Ben Grier.
+"""
+
+
 include("data_matching.jl")
 
 # Process manta tow data.

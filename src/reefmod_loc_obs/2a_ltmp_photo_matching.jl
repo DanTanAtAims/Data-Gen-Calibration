@@ -1,3 +1,9 @@
+"""
+Perform reefmod location data matching on ltmp photo/video data.
+
+Written by Ben Grier.
+"""
+
 include("data_matching.jl")
 
 # Process ltmp data
