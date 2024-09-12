@@ -178,5 +178,5 @@ ltmp_hc = Dataset(
     :OTHER => other[2]
 )
 
-@info "Writing manta tow observations for reefmod location to $(OUT_MANTA_NETCDF)"
+@info "Writing photo and video observations for reefmod location to $(OUT_PHOTO_NETCDF)"
 savedataset(ltmp_hc; path=OUT_PHOTO_NETCDF, driver=:netcdf, overwrite=true)

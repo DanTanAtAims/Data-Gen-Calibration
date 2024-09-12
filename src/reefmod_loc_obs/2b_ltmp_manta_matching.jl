@@ -28,5 +28,5 @@ manta_LC_df = leftjoin(manta_LC_df, rme_reefs[:, [:GBRMPA_ID, :RME_UNIQUE_ID]], 
 select!(manta_LC_df, [:REEF_ID, :GBRMPA_ID, :RME_UNIQUE_ID], Not([:REEF_ID, :GBRMPA_ID, :RME_UNIQUE_ID]))
 manta_LC_df.GBRMPA_ID = Vector{Union{Missing, String}}(manta_LC_df.GBRMPA_ID)
 
-@info "Writing LTMP Manta Tow Coral Observations At ReefMod Locations"
+@info "Writing LTMP Manta Tow Coral Observations At ReefMod Locations to $(OUT_RME_MANTA)"
 GDF.write(OUT_RME_MANTA, manta_LC_df; crs=GFT.EPSG(4326))
