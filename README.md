@@ -27,6 +27,12 @@ section has its own run and execution order. See below for more information.
 
 ## Location Classification
 
+### Script Execution
+
+```julia-repl
+julia> include("src/classification/run.jl")
+```
+
 ## Location Level Ground Truth
 
 [comment]: <> (The following was written by Ben Grier)
