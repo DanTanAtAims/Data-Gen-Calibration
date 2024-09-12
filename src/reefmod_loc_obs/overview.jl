@@ -1,21 +1,15 @@
-using MAT
-using Infiltrator
-
-using TOML
-
-using CSV, Dates, DataFrames, DimensionalData, YAXArrays, Zarr
-
 include("utils.jl")
+include("common.jl")
+using CSV,
+    Dates,
+    DataFrames,
+    DimensionalData,
+    YAXArrays,
+    NetCDF
 
 
-config = TOML.parsefile(joinpath(@__DIR__, "config.toml"))
-path_configs = config["data_paths"]
-
-ltmp_hc_sc_a_by_site_fn = path_configs["ltmp_vid_photo_path"]
-manta_tow_by_reef_fn = path_configs["manta_tow_path"]
-
-ltmp_site_data = CSV.read(ltmp_hc_sc_a_by_site_fn, DataFrame)
-manta_tow_data = CSV.read(manta_tow_by_reef_fn,    DataFrame)
+ltmp_site_data = CSV.read(LTMP_PHOTO_FN, DataFrame)
+manta_tow_data = CSV.read(LTMP_MANTA_FN, DataFrame)
 
 # Add years
 ltmp_site_data[!, :REPORT_YEAR] = Dates.year.(ltmp_site_data.SAMPLE_DATE)
@@ -80,6 +74,8 @@ end
 var_creater = x -> create_var(manta_tow_data, x)
 
 manta_tow = Dataset(; var_creater.(vars)...)
+@info "Writing manta tow observations for reefmod location to $(OUT_MANTA_NETCDF)"
+savedataset(manta_tow; path=OUT_MANTA_NETCDF, driver=:netcdf, overwrite=true)
 
 hard_coral = create_var(ltmp_hard_coral, :COVER)
 soft_coral = create_var(ltmp_soft_coral, :COVER)
@@ -93,3 +89,6 @@ ltmp_hc = Dataset(
     :ALGAE => algae[2],
     :OTHER => other[2]
 )
+
+@info "Writing manta tow observations for reefmod location to $(OUT_MANTA_NETCDF)"
+savedataset(ltmp_hc; path=OUT_PHOTO_NETCDF, driver=:netcdf, overwrite=true)

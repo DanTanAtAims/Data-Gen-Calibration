@@ -2,7 +2,7 @@ include("../common.jl")
 
 if !haskey(config_toml, "Location_Classification")
     throw(ArgumentError(
-        "Unable to find \"Location Classification\" section in config.toml"
+        "Unable to find \"Location_Classification\" section in config.toml"
     ))
 end
 
