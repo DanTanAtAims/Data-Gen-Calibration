@@ -128,5 +128,3 @@ end
 
 # Insert directories for canonical-reefs geopackage and ltmp data directory.
 rme_reefs = GDF.read(CANONICAL_GPKG_FN)
-
-DATA_DIR = "c:/Users/bgrier/Documents/Projects/ltmp_reefmod_comb/"
