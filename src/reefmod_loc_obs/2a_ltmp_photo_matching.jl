@@ -10,7 +10,7 @@ include("data_matching.jl")
 
 ltmp_data = CSV.read(LTMP_PHOTO_FN, DataFrame)
 gd = DataFrames.groupby(ltmp_data, [:REEF_ID, :YEAR_CODE, :GROUP_CODE])
-ltmp_reef_level = combine(gd, [:LATITUDE, :LONGITUDE, :COVER] .=> mean)
+ltmp_reef_level = DataFrames.combine(gd, [:LATITUDE, :LONGITUDE, :COVER] .=> mean)
 
 # Particular years have incorrect lon/lat at some REEF_IDs. Need to standardise them for later
 ltmp_reef_level[ltmp_reef_level.REEF_ID .== "16028S", :LATITUDE_mean] .= -16.3867
@@ -59,7 +59,7 @@ GDF.write(OUT_RME_PHOTO_HC, ltmp_reef_hc; crs=GFT.EPSG(4326))
 # Process ltmp-total-cover data
 ltmp_hc_sc = ltmp_reef_level[ltmp_reef_level.GROUP_CODE .∈ [["Hard Coral", "Soft Coral"]], :]
 gdf = DataFrames.groupby(ltmp_hc_sc, [:REEF_ID, :YEAR_CODE, :LATITUDE_mean, :LONGITUDE_mean, :geometry, :GBRMPA_ID, :RME_UNIQUE_ID])
-ltmp_hc_sc = combine(gdf, :COVER_mean .=> sum)
+ltmp_hc_sc = DataFrames.combine(gdf, :COVER_mean .=> sum)
 
 ltmp_hc_sc.YEAR .= ""
 ltmp_hc_sc.YEAR_CODE = string.(ltmp_hc_sc.YEAR_CODE)

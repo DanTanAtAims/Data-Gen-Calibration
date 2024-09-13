@@ -2,7 +2,7 @@
 Get LTMP observation for location classifications. Calculate the standard deviation as well.
 """
 
-include("common.jl")
+include("../common.jl")
 
 using ADRIA
 using ADRIA: AG, GDF
@@ -17,7 +17,6 @@ using CSV,
 function matrix_flatten_ignore(mat)
     return [el for el in mat if !ismissing(el)]
 end
-
 function subdf_mean(flattened)::Float64
     return mean(flattened)
 end

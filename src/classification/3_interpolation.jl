@@ -34,7 +34,10 @@ function interpolate!(df::DataFrame, missing_idx::Int64, non_missing::DataFrame)
     n_neighbours = 10
     closest = sortperm(distances)[1:n_neighbours]
     weightings = distances[closest] ./ sum(distances[closest])
-    df[missing_idx, :] .= sum.(eachcol(masked_df[closest, :] .* weightings))
+    to_ignore = Not(:shelf_position, :ltmp_region, :lons, :lats)
+    df[missing_idx, to_ignore] .= sum.(eachcol(
+        masked_df[closest, to_ignore] .* weightings
+    ))
 
     return nothing
 end

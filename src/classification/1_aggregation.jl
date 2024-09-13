@@ -34,18 +34,18 @@ Furthermore, calculate the mean and standard deviation for the slope and flats.
 Geomorphologies are masked by habitability.
 """
 function calc_stats(slps, flts, habitable, var_rast, dom)
-    var_habitable  = Rasters.mask(var_rast; with=habitable, boundary=:touches, progress=false)
-    var_slopes     = Rasters.mask(var_habitable; with=slps, boundary=:touches, progress=false)
-    var_flats      = Rasters.mask(var_habitable; with=flts, boundary=:touches, progress=false)
+    var_habitable  = Rasters.mask(var_rast; with=habitable, boundary=:touches, progress=false, verbose=false)
+    var_slopes     = Rasters.mask(var_habitable; with=slps, boundary=:touches, progress=false, verbose=false)
+    var_flats      = Rasters.mask(var_habitable; with=flts, boundary=:touches, progress=false, verbose=false)
 
-    var_mean       = Rasters.zonal(mean, var_habitable; of=dom.site_data.geom, progress=false)
-    var_std        = Rasters.zonal(std,  var_habitable; of=dom.site_data.geom, progress=false)
+    var_mean       = Rasters.zonal(mean, var_habitable; of=dom.site_data.geom, progress=false, verbose=false)
+    var_std        = Rasters.zonal(std,  var_habitable; of=dom.site_data.geom, progress=false, verbose=false)
 
-    var_slope_mean = Rasters.zonal(mean, var_slopes; of=dom.site_data.geom, progress=false)
-    var_slope_std  = Rasters.zonal(std,  var_slopes; of=dom.site_data.geom, progress=false)
+    var_slope_mean = Rasters.zonal(mean, var_slopes; of=dom.site_data.geom, progress=false, verbose=false)
+    var_slope_std  = Rasters.zonal(std,  var_slopes; of=dom.site_data.geom, progress=false, verbose=false)
 
-    var_flats_mean = Rasters.zonal(mean, var_flats; of=dom.site_data.geom, progress=false)
-    var_flats_std  = Rasters.zonal(std,  var_flats; of=dom.site_data.geom, progress=false)
+    var_flats_mean = Rasters.zonal(mean, var_flats; of=dom.site_data.geom, progress=false, verbose=false)
+    var_flats_std  = Rasters.zonal(std,  var_flats; of=dom.site_data.geom, progress=false, verbose=false)
 
     return var_flats_mean, var_flats_std, var_slope_mean, var_slope_std, var_mean, var_std
 end
@@ -73,12 +73,12 @@ end
 Calculate the proportion of polygon covered by habitable slope and flats.
 """
 function slope_flat_prop(slps, flts, habitable, one_rast, dom)
-    one_habitable = Rasters.mask(one_rast; with=habitable, boundary=:touches, progress=false)
-    one_slopes = Rasters.mask(one_habitable; with=slps, bounary=:touches, progress=false)
-    one_flats = Rasters.mask(one_habitable; with=flts, boundary=:touches, progress=false)
+    one_habitable = Rasters.mask(one_rast; with=habitable, boundary=:touches, progress=false, verbose=false)
+    one_slopes = Rasters.mask(one_habitable; with=slps, bounary=:touches, progress=false, verbose=false)
+    one_flats = Rasters.mask(one_habitable; with=flts, boundary=:touches, progress=false, verbose=false)
 
-    slp_count = Rasters.zonal(sum, one_slopes; of=dom.site_data.geom, progress=false)
-    flt_count = Rasters.zonal(sum, one_flats; of=dom.site_data.geom, progress=false)
+    slp_count = Rasters.zonal(sum, one_slopes; of=dom.site_data.geom, progress=false, verbose=false)
+    flt_count = Rasters.zonal(sum, one_flats; of=dom.site_data.geom, progress=false, verbose=false)
 
     total = total_aggregation.(slp_count, flt_count)
     return flt_count ./ total, slp_count ./ total
