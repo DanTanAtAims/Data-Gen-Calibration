@@ -20,6 +20,35 @@ The scripts are assumed to be executed from the repository root directory.
 julia> ]instantiate
 
 julia> include("run.jl")
+[ Info: Generating Location Classifications
+[ Info: Processing Cairns-Cooktown
+[ Info: Processing Cairns-Cooktown: proportions
+[ Info: Processing Cairns-Cooktown: waves_ub
+[ Info: Processing Cairns-Cooktown: waves_hs
+[ Info: Processing Cairns-Cooktown: waves_tp
+[ Info: Processing Cairns-Cooktown: bathy
+[ Info: Processing Cairns-Cooktown: turbid
+[ Info: Processing FarNorthern
+...
+[ Info: Processing Mackay-Capricorn
+...
+[ Info: Processing Townsville-Whitsunday
+...
+[ Info: Classifying ltmp and shelf regions.
+[ Info: Writing updated location data to <OUTPUT-PATH>
+[ Info: Filling Missing Values
+[ Info: Writing updated location data to <OUTPUT-PATH>
+[ Info: Classifying Locations
+[ Info: Writing location classification to <OUTPUT-PATH>
+[ Info: Generating LTMP Observations for Reefmod Locations
+[ Info: Writing manta tow observations for reefmod location to <OUTPUT-PATH>
+...
+[ Info: Generating LTMP Observations for Location Classifications
+┌ Warning: Skipping Missing ID
+└ @ Main \Data-Gen-Calibration\src\class_obs\site_level.jl:106
+...
+[ Info: Writing LTMP Manta Tow Observations for Location Classes to <OUTPUT-PATH>
+[ Info: Writing LTMP PHOTO TS Observations for Location Classes to <OUTPUT-PATH>
 ```
 
 Scripts need not be executed at the same time using the top level `run.jl` script. Each
