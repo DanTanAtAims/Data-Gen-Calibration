@@ -12,6 +12,24 @@ directory. See the `example_config.toml` for the expected TOML format. Given the
 of data required each section is able to run seperately if data requirements are not met for
 all sections.
 
+Expected `config.toml` format.
+
+```toml
+[Common]
+rme_domain_path = ""
+
+[Location_Classification]
+mpa_geospatial_dir = ""
+aca_geospatial_dir = ""
+outer_shelf_gpkg = ""
+inner_shelf_gpkg = ""
+
+[reefmod_loc_obs]
+canonical_gpkg_path = ""
+ltmp_vid_photo_path = ""
+ltmp_manta_tow_path = ""
+```
+
 ### Script Execution
 
 The scripts are assumed to be executed from the repository root directory.
