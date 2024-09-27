@@ -55,5 +55,7 @@ features[!, :classification] .= classify_location.(eachrow(features))
 # Some classes contain no locations. New column gives consecutive class ids consecutive.
 features[!, :consecutive_classification] .= [findfirst(x -> x == class, unique(features.classification)) for class in features.classification]
 
+features[!, :RME_UNIQUE_ID] .= dom.site_data.UNIQUE_ID
+
 @info "Writing location classification to $(OUTPUT_CSV)"
 CSV.write(OUTPUT_CSV, features)
