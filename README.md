@@ -30,6 +30,10 @@ ltmp_vid_photo_path = ""
 ltmp_manta_tow_path = ""
 ```
 
+The source of the above data is described in `docs/data_sources.md`.
+
+The contents of the output data is also described in `docs/output_data.md`
+
 ### Script Execution
 
 The scripts are assumed to be executed from the repository root directory.
@@ -74,6 +78,10 @@ section has its own run and execution order. See below for more information.
 
 ## Location Classification
 
+Calibrating the initial coral cover to fit to LTMP manta tow data suffers from a significant
+dimensionality problem. In order to partially resolve this, locations were grouped based on
+similar mean depth, turbidity and routine wave activity (ubed90).
+
 ### Script Execution
 
 ```julia-repl
@@ -116,4 +124,14 @@ julia> include("src/reefmod_loc_obs/run.jl")
 
 ## Classification Level Ground Truth
 
+In order to fit to reefs for which there was no direct LTMP manta tow data available, LTMP
+manta tow data was grouped using the location classification developed ealier. The mean and
+standard deviation of each year was calculated where possible for each class of locations.
 
+### Script Execution
+
+The following can only be run if both the previous scripts have been run.
+
+```julia-repl
+julia> include("src/class_obs/run.jl")
+```
