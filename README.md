@@ -3,6 +3,9 @@
 This repository contains scripts used to generate the data for the calibration of
 [ADRIAmod](https://github.com/open-AIMS/ADRIA.jl)/[CoralBlox](https://github.com/open-AIMS/CoralBlox.jl).
 
+*To do: ubed90 is not calculated in the reef guidance api library so this must be
+generated here.*
+
 ## Setup
 
 ### Required Data and Path Configuration
@@ -30,9 +33,9 @@ ltmp_vid_photo_path = ""
 ltmp_manta_tow_path = ""
 ```
 
-The source of the above data is described in `docs/data_sources.md`.
+The source of the above data is described in [docs/data_sources.md](https://github.com/DanTanAtAims/Data-Gen-Calibration/blob/main/docs/data_sources.md).
 
-The contents of the output data is also described in `docs/output_data.md`
+The contents of the output data is also described in [docs/output_data.md](https://github.com/DanTanAtAims/Data-Gen-Calibration/blob/main/docs/output_data.md)
 
 ### Script Execution
 
@@ -130,7 +133,7 @@ standard deviation of each year was calculated where possible for each class of 
 
 ### Script Execution
 
-The following can only be run if both the previous scripts have been run.
+The following can only be run if both the above scripts have been run.
 
 ```julia-repl
 julia> include("src/class_obs/run.jl")
