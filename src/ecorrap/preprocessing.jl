@@ -19,8 +19,8 @@ end
     get_growth_entries(raw_data::DataFrame)::DataFrame
 
 Given the csv from containing all entries of the coral demograph data, remove rows not
-related to the calculation of growth statistics and add diameter and linear extension
-columns.
+related to the calculation of growth statistics and add diameter, log diameter and linear
+extension columns.
 """
 function get_growth_entries(raw_data::DataFrame)::DataFrame
     # Construct masks to remove unused and missing data
@@ -41,9 +41,15 @@ function get_growth_entries(raw_data::DataFrame)::DataFrame
     growth_data[!, :diam]     .= _area_to_diam.(growth_data.size)
     growth_data[!, :diamNext] .= _area_to_diam.(growth_data.sizeNext)
 
+    # Add log diameter column
+    growth_data[!, :logdiam]  .= log.(2, growth_data.diam)
+
     # Add growth and linear extension entries into data frame
     growth_data[!, :growth]  .= growth_data.sizeNext .- growth_data.size
-    growth_data[!, :lin_ext] .= growth_data.diamNext .= growth_data.diam
+    growth_data[!, :lin_ext] .= growth_data.diamNext .- growth_data.diam
+
+    # Cast taxa String15 type to string type
+    growth_data[!, :Taxa] .= String.(growth_data.Taxa)
 
     return growth_data
 end
@@ -52,7 +58,7 @@ end
     get_survival_entries(raw_data:;DataFrame)::DataFrame
 
 Given the csv from containing all entries of the coral demograph data, remove rows not
-related to the calculation of survival statistics and add diameter column.
+related to the calculation of survival statistics and add diameter and log diameter columns.
 """
 function get_survival_entries(raw_data::DataFrame)::DataFrame
     # Construct masks to remove unused and missing data
@@ -66,6 +72,12 @@ function get_survival_entries(raw_data::DataFrame)::DataFrame
 
     # insert diameter column
     survival_data[!, :diam] .= _area_to_diam.(survival_data.size)
+
+    # Add log diameter column
+    survival_data[!, :logdiam]  .= log.(2, survival_data.diam)
+
+    # Cast taxa String15 type to string type
+    survival_data[!, :Taxa] .= String.(survival_data.Taxa)
 
     return survival_data
 end

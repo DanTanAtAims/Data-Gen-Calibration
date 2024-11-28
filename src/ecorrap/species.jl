@@ -13,7 +13,7 @@ include("common.jl")
 
 using CSV, DataFrames
 
-const CScape_to_ADRIA::Dict{String, String} = Dict(
+global CScape_to_ADRIA::Dict{Symbol, Symbol} = Dict(
     :acro_table => :tabular_Acropora,
     :corymbose_Acropora => :corymbose_Acropora,
     :corym_non_acro => :corymbose_non_Acropora,
@@ -24,7 +24,7 @@ const CScape_to_ADRIA::Dict{String, String} = Dict(
 global classification_csv = CSV.read(CORAL_CLASSIFICATION_PATH, DataFrame)
 
 """
-    species_code_to_cscape(code::String)::String
+    _species_code_to_cscape(code::String)::String
 
 Convert a ecorrap species code to a cscape functional group name.
 """
@@ -40,14 +40,15 @@ function _species_code_to_cscape(code::String)::String
     elseif n_matches == 0
         msg  = "Given species code, $(code), "
         msg *= "does not match any codes found in classification DataFrame."
-        throw(ArgumentError(msg))
+        @debug msg
+        return "no match"
     end
 
     return classification_csv.Cscape_group[code_matches][1]
 end
 
 function _is_functional_group(code::String, target_cscape_group::String)::Bool
-    cscape_group = species_code_to_cscape(code)
+    cscape_group = _species_code_to_cscape(code)
     return cscape_group == target_cscape_group
 end
 
