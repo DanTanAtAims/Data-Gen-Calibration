@@ -43,14 +43,14 @@ unique_sites = unique(growth_data.Site_UID)
 """
     plot_observation_over_sites(counts::Vector{Int64}, taxa_name::String)::Figure
 """
-function plot_observation_over_sites(counts::Vector{Int64}, taxa_name::String)::Figure
+function plot_observation_over_sites(counts::Vector{Int64}, taxa_name::String, loc_level::String)::Figure
 
     f = Figure(; size=(1200, 900))
     Axis(
         f[1, 1],
-        xlabel="Observation Site",
+        xlabel= loc_level,
         ylabel="Observation Counts",
-        title="EcoRRAP $(taxa_name) Observation site distributions"
+        title="EcoRRAP $(taxa_name) Observation " * loc_level * " distributions"
     )
     barplot!(
         1:length(counts),
@@ -68,7 +68,7 @@ site_counts = [
     count(growth_data.Site_UID .== site_uid) for site_uid in unique_sites
 ]
 
-f = plot_observation_over_sites(site_counts, "")
+f = plot_observation_over_sites(site_counts, "", "site")
 save(joinpath(OUT_PLOT_DIR, "site_count_dists", "ecorrap_growth_site_barplot.png"), f)
 
 # Plot the distribution of data points across all sites limited to functional group
@@ -77,8 +77,48 @@ for (nm, df) in zip(taxa_nms, taxa_dfs)
         count(df.Site_UID .== site_uid) for site_uid in unique_sites
     ]
 
-    local f = plot_observation_over_sites(site_counts, nm)
+    local f = plot_observation_over_sites(site_counts, nm, "site")
     save(joinpath(OUT_PLOT_DIR, "site_count_dists", "ecorrap_growth_site_$(nm).png"), f)
+end
+
+# Plot the distribution of all data points across all clusters (offshore far northern, etc.)
+unique_clusters = unique(growth_data.Cluster)
+
+cluster_counts = [
+    count(growth_data.Cluster .== cluster_name) for cluster_name in unique_clusters
+]
+
+# Plot the distribution of data points across all clusters limited to functional group
+f = plot_observation_over_sites(cluster_counts, "", "Cluster")
+save(joinpath(OUT_PLOT_DIR, "cluster_count_dists", "ecorrap_growth_cluster_barplot.png"), f)
+
+for (nm, df) in zip(taxa_nms, taxa_dfs)
+    local cluster_counts = [
+        count(df.Cluster .== cluster_name) for cluster_name in unique_clusters
+    ]
+
+    local f = plot_observation_over_sites(cluster_counts, nm, "Cluster")
+    save(joinpath(OUT_PLOT_DIR, "cluster_count_dists", "ecorrap_growth_cluster_$(nm).png"), f)
+end
+
+# Plot the distribution of all data points across all reefs
+unique_reefs = unique(growth_data.Reef)
+
+reef_counts = [
+    count(growth_data.Reef .== reef_name) for reef_name in unique_reefs
+]
+
+# Plot the distribution of data points across all clusters limited to functional group
+f = plot_observation_over_sites(reef_counts, "", "Reef")
+save(joinpath(OUT_PLOT_DIR, "reef_count_dists", "ecorrap_growth_reef_barplot.png"), f)
+
+for (nm, df) in zip(taxa_nms, taxa_dfs)
+    local reef_counts = [
+        count(df.Reef .== reef_name) for reef_name in unique_reefs
+    ]
+
+    local f = plot_observation_over_sites(reef_counts, nm, "Reef")
+    save(joinpath(OUT_PLOT_DIR, "reef_count_dists", "ecorrap_growth_reef_$(nm).png"), f)
 end
 
 # Plot log size distribution
@@ -163,16 +203,17 @@ function construct_windows(
     return lower_bounds, upper_bounds
 end
 
+# Take a moving average of linear extension rates
 n_windows = 200
 widths = 0.4
 
 all_taxa_windows = construct_windows(growth_data, :logdiam, widths, n_windows)
 
-tabular_acropora_win       = construct_windows(tabular_acropora_data, :logdiam, widths, n_windows)
-corymbose_acropora_win     = construct_windows(corymbose_acropora_data, :logdiam, widths, n_windows)
+tabular_acropora_win       = construct_windows(tabular_acropora_data,       :logdiam, widths, n_windows)
+corymbose_acropora_win     = construct_windows(corymbose_acropora_data,     :logdiam, widths, n_windows)
 corymbose_non_acropora_win = construct_windows(corymbose_non_acropora_data, :logdiam, widths, n_windows)
-small_massive_win          = construct_windows(small_massive_data, :logdiam, widths, n_windows)
-large_massive_win          = construct_windows(large_massive_data, :logdiam, widths, n_windows)
+small_massive_win          = construct_windows(small_massive_data,          :logdiam, widths, n_windows)
+large_massive_win          = construct_windows(large_massive_data,          :logdiam, widths, n_windows)
 
 taxa_wins = [
     tabular_acropora_win,
