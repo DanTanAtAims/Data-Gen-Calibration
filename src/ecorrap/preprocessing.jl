@@ -51,6 +51,9 @@ function get_growth_entries(raw_data::DataFrame)::DataFrame
     # Cast taxa String15 type to string type
     growth_data[!, :Taxa] .= String.(growth_data.Taxa)
 
+    no_partial_mask = growth_data.lin_ext .> 0.0
+    growth_data = growth_data[no_partial_mask, :]
+
     return growth_data
 end
 
