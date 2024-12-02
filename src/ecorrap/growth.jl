@@ -46,7 +46,7 @@ site_counts = [
     count(growth_data.Site_UID .== site_uid) for site_uid in unique_sites
 ]
 
-f = plot_observation_over_sites(site_counts, "", "site")
+f = plot_observation_over_sites(site_counts, "", "site", unique_sites)
 save(joinpath(OUT_PLOT_DIR, "growth", "site_count_dists", "ecorrap_growth_site_barplot.png"), f)
 
 # Plot the distribution of data points across all sites limited to functional group
@@ -55,7 +55,7 @@ for (nm, df) in zip(taxa_nms, taxa_dfs)
         count(df.Site_UID .== site_uid) for site_uid in unique_sites
     ]
 
-    local f = plot_observation_over_sites(site_counts, nm, "site")
+    local f = plot_observation_over_sites(site_counts, nm, "site", unique_sites)
     save(joinpath(OUT_PLOT_DIR, "growth", "site_count_dists", "ecorrap_growth_site_$(nm).png"), f)
 end
 
@@ -67,7 +67,7 @@ cluster_counts = [
 ]
 
 # Plot the distribution of data points across all clusters limited to functional group
-f = plot_observation_over_sites(cluster_counts, "", "Cluster")
+f = plot_observation_over_sites(cluster_counts, "", "Cluster", unique_clusters)
 save(joinpath(OUT_PLOT_DIR, "growth", "cluster_count_dists", "ecorrap_growth_cluster_barplot.png"), f)
 
 for (nm, df) in zip(taxa_nms, taxa_dfs)
@@ -75,7 +75,7 @@ for (nm, df) in zip(taxa_nms, taxa_dfs)
         count(df.Cluster .== cluster_name) for cluster_name in unique_clusters
     ]
 
-    local f = plot_observation_over_sites(cluster_counts, nm, "Cluster")
+    local f = plot_observation_over_sites(cluster_counts, nm, "Cluster", unique_clusters)
     save(joinpath(OUT_PLOT_DIR, "growth", "cluster_count_dists", "ecorrap_growth_cluster_$(nm).png"), f)
 end
 
@@ -87,7 +87,7 @@ reef_counts = [
 ]
 
 # Plot the distribution of data points across all clusters limited to functional group
-f = plot_observation_over_sites(reef_counts, "", "Reef")
+f = plot_observation_over_sites(reef_counts, "", "Reef", unique_reefs)
 save(joinpath(OUT_PLOT_DIR, "growth", "reef_count_dists", "ecorrap_growth_reef_barplot.png"), f)
 
 for (nm, df) in zip(taxa_nms, taxa_dfs)
@@ -95,7 +95,7 @@ for (nm, df) in zip(taxa_nms, taxa_dfs)
         count(df.Reef .== reef_name) for reef_name in unique_reefs
     ]
 
-    local f = plot_observation_over_sites(reef_counts, nm, "Reef")
+    local f = plot_observation_over_sites(reef_counts, nm, "Reef", unique_reefs)
     save(joinpath(OUT_PLOT_DIR, "growth", "reef_count_dists", "ecorrap_growth_reef_$(nm).png"), f)
 end
 

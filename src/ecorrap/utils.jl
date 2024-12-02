@@ -3,11 +3,13 @@ using CairoMakie
 """
     plot_observation_over_sites(counts::Vector{Int64}, taxa_name::String)::Figure
 """
-function plot_observation_over_sites(counts::Vector{Int64}, taxa_name::String, loc_level::String)::Figure
+function plot_observation_over_sites(counts::Vector{Int64}, taxa_name::String, loc_level::String, x_nms)::Figure
 
     f = Figure(; size=(1200, 900))
     Axis(
         f[1, 1],
+        xticks=(1:length(x_nms), x_nms),
+        xticksvisible=true,
         xlabel= loc_level,
         ylabel="Observation Counts",
         title="EcoRRAP $(taxa_name) Observation " * loc_level * " distributions"
