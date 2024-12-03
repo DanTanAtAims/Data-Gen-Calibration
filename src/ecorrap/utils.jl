@@ -315,3 +315,150 @@ function plot_mean_coefficients(
     axislegend(ax)
     return f
 end
+
+function calculate_survival(
+    df::DataFrame,
+    windows::WIN_TYPE;
+    count_threshold::Int64=20
+)::LINEXT_STATS
+    linexts_means::Vector{MFLOAT}  = Vector{MFLOAT}(missing, length(windows[1]))
+    linexts_stdevs::Vector{MFLOAT} = Vector{MFLOAT}(missing, length(windows[1]))
+
+    for (idx, win) in enumerate(zip(windows...))
+        win_mask = win[1] .< df.logdiam .< win[2]
+        if count(win_mask) .< count_threshold
+            continue
+        end
+        linexts_means[idx]  = mean(df[win_mask, :surv])
+        linexts_stdevs[idx] = std(df[win_mask, :surv])
+    end
+    return linexts_means, linexts_stdevs
+end
+
+function plot_survival(
+    df::DataFrame,
+    windows::WIN_TYPE,
+    title::String;
+    count_threshold::Int64=20,
+)::Figure
+
+    surv_means, surv_stdevs = calculate_survival(
+        df, windows; count_threshold=count_threshold
+    )
+
+    xs = [
+        ((lb + ub) / 2) for (lb, ub) in zip(windows[1], windows[2])
+    ]
+
+    non_missing_mask = (!).(ismissing.(surv_means))
+    xs             = xs[non_missing_mask]
+    surv_means  = surv_means[non_missing_mask]
+    surv_stdevs = surv_stdevs[non_missing_mask]
+
+    f = Figure(; size=(1200, 900))
+    Axis(f[1, 1], xlabel="Log Diameter (cm)", ylabel="Survival Probability", title=title, limits=(0, nothing, 0, 1))
+    lines!(xs, surv_means; color=:black)
+    band!(
+        xs, surv_means .- surv_stdevs, surv_means .+ surv_stdevs;
+        color=(:blue, 0.3)
+    )
+
+    return f
+end
+
+function plot_locs_survival(
+    df::DataFrame,
+    windows::WIN_TYPE,
+    row_masks,
+    row_names,
+    title::String;
+    count_threshold::Int64=20
+)::Figure
+
+    surv_means, surv_stdevs = calculate_survival(
+        df, windows; count_threshold=count_threshold
+    )
+
+    _xs = [
+        ((lb + ub) / 2) for (lb, ub) in zip(windows[1], windows[2])
+    ]
+
+    non_missing_mask = (!).(ismissing.(surv_means))
+    xs             = _xs[non_missing_mask]
+    surv_means  = surv_means[non_missing_mask]
+    surv_stdevs = surv_stdevs[non_missing_mask]
+
+    f = Figure(; size=(1200, 900))
+    ax = Axis(f[1, 1], xlabel="Log Diameter (cm)", ylabel="Survival Probability", title=title, limits=(0, nothing, 0, 1))
+    lines!(xs, surv_means; color=:black)
+    band!(
+        xs, surv_means .- surv_stdevs, surv_means .+ surv_stdevs;
+        color=(:blue, 0.3)
+    )
+    # Only display the legend if there was data to plot to avoid error
+    plotted_a_location = false
+
+    for (nm, r_msk) in zip(row_names, row_masks)
+        surv_means, surv_stdevs = calculate_survival(
+            df[r_msk, :], windows; count_threshold=count_threshold
+        )
+
+        non_missing_mask = (!).(ismissing.(surv_means))
+        xs             = _xs[non_missing_mask]
+        surv_means  = surv_means[non_missing_mask]
+        if count(non_missing_mask) == 0
+            continue
+        end
+        plotted_a_location = true
+
+        scatter!(ax, xs, surv_means, label=nm)
+    end
+    if plotted_a_location
+        axislegend(ax; position=:rb)
+    end
+    return f
+end
+
+function plot_implied_coefficient_survival(
+    df::DataFrame,
+    windows::WIN_TYPE,
+    row_masks,
+    row_names,
+    title::String;
+    count_threshold::Int64=20
+)
+    gbr_surv_means, gbr_surv_stdevs = calculate_survival(
+        df, windows; count_threshold=count_threshold
+    )
+
+    _xs = [
+        ((lb + ub) / 2) for (lb, ub) in zip(windows[1], windows[2])
+    ]
+
+    f = Figure(; size=(1200, 900))
+    ax = Axis(f[1, 1], xlabel="Log Diameter (cm)", ylabel="Scale Coefficient", title=title, limits=(0.0, nothing, 0.0, nothing))
+    lines!(_xs[[1, end]], [1.0, 1.0])
+    plotted_a_location = false
+
+    for (nm, r_msk) in zip(row_names, row_masks)
+        surv_means, surv_stdevs = calculate_survival(
+            df[r_msk, :], windows; count_threshold=count_threshold
+        )
+        coefs = surv_means ./ gbr_surv_means
+
+        non_missing_mask = (!).(ismissing.(coefs))
+        xs             = _xs[non_missing_mask]
+        coefs  = coefs[non_missing_mask]
+
+        if count(non_missing_mask) == 0
+            continue
+        end
+        plotted_a_location = true
+
+        scatter!(ax, xs, coefs, label=nm)
+    end
+    if plotted_a_location
+        axislegend(ax)
+    end
+    return f
+end
