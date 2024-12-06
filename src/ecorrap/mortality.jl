@@ -1,4 +1,6 @@
 """
+Calculate and plot statistics relating to the mortality of rates of corals observed in the
+EcoRRAP dataset.
 """
 
 include("common.jl")
