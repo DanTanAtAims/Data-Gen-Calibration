@@ -170,3 +170,14 @@ julia> include("src/ecorrap/growth.jl")
 # mortality script
 julia> include("src/ecorrap/mortality.jl")
 ```
+
+## Bioregions
+
+Group bioregions based on availability of data such that the final groupings contains enough
+LTMP locations to perform a reasonably calibration/validation split.
+
+Furthermore, plot availability of plots to the output directory. See the [docs/data_sources.md](https://github.com/DanTanAtAims/Data-Gen-Calibration/blob/main/docs/data_sources.md) to find the source of required data.
+
+```julia
+julia> include("src/bioregions/bioregions.jl")
+```

@@ -40,3 +40,7 @@ Programming. The sampling methodology is described [here](https://www.aims.gov.a
    photogrammetry/EcoRRAP species classification found [here](https://github.com/open-AIMS/CoralDemography_EcoRRAP/blob/main/1_AnnaIPMs/1_data/ecorrap%20to%20cscape%20species.csv)
 
 <sup>4</sup>The repository containing the data is a private repository.
+
+## Bioregions
+
+1. bioregion_shp_path - Shapefile with reef outlines and bioregions found [here](https://geohub-gbrmpa.hub.arcgis.com/datasets/GBRMPA::reefal-marine-bioregions/about)
