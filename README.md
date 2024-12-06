@@ -6,7 +6,15 @@ This repository contains scripts used to generate the data for the calibration o
 *To do: ubed90 is not calculated in the reef guidance api library so this must be
 generated here.*
 
-## Setup
+## Index
+
+1. [Setup](#set-up)
+2. [Location Classification](#location-classification)
+3. [Location Level Ground Truth](#location-level-ground-truth)
+4. [Classification Level Ground Truth](#classification-level-ground-truth)
+4. [EcoRRAP](#EcoRRAP)
+
+## Set up
 
 ### Required Data and Path Configuration
 
@@ -31,6 +39,13 @@ inner_shelf_gpkg = ""
 canonical_gpkg_path = ""
 ltmp_vid_photo_path = ""
 ltmp_manta_tow_path = ""
+
+[EcoRRAP]
+coral_observation_path = ""
+coral_classification_path = ""
+
+[Bioregions]
+bioregion_shp_path = ""
 ```
 
 The source of the above data is described in [docs/data_sources.md](https://github.com/DanTanAtAims/Data-Gen-Calibration/blob/main/docs/data_sources.md).
@@ -137,4 +152,21 @@ The following can only be run if both the above scripts have been run.
 
 ```julia-repl
 julia> include("src/class_obs/run.jl")
+```
+
+## EcoRRAP
+
+Analysing the EcoRRAP data to inform the minimum and maximum bounds for the location scaling
+coefficients. See the [docs/data_sources.md](https://github.com/DanTanAtAims/Data-Gen-Calibration/blob/main/docs/data_sources.md) to find the source of required data.
+
+### Script
+
+```julia
+# growth script
+julia> include("src/ecorrap/growth.jl")
+```
+
+```julia
+# mortality script
+julia> include("src/ecorrap/mortality.jl")
 ```

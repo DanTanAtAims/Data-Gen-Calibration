@@ -31,3 +31,12 @@ geopackages that define shelf regions can be used.
 
 <sup>3</sup>AIMS LTMP is the Australian Institute of Marine Science Long Term Monitoring
 Programming. The sampling methodology is described [here](https://www.aims.gov.au/research-topics/monitoring-and-discovery/monitoring-great-barrier-reef/reef-monitoring-sampling-methods).
+
+## EcoRRAP
+
+1. coral_observation_path - <sup>4</sup>EcoRRAP and Photogrammetry Coral observations found
+   [here](https://github.com/open-AIMS/CoralDemography_EcoRRAP/blob/main/1_AnnaIPMs/1_data/EcoRRAP%20data%20for%20IPM_240630.csv)
+2. coral_classification_path - <sup>4</sup>Mapping between C~Scape functional groups and
+   photogrammetry/EcoRRAP species classification found [here](https://github.com/open-AIMS/CoralDemography_EcoRRAP/blob/main/1_AnnaIPMs/1_data/ecorrap%20to%20cscape%20species.csv)
+
+<sup>4</sup>The repository containing the data is a private repository.

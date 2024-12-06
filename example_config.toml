@@ -11,3 +11,10 @@ inner_shelf_gpkg = ""
 canonical_gpkg_path = ""
 ltmp_vid_photo_path = ""
 ltmp_manta_tow_path = ""
+
+[EcoRRAP]
+coral_observation_path = ""
+coral_classification_path = ""
+
+[Bioregions]
+bioregion_shp_path = ""
