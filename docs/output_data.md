@@ -55,3 +55,11 @@ observations were collected.
 ## Classification Level Observation Data
 
 *To do*
+
+## EcoRRAP Coral Parameters
+
+-`ecorrap_params.nc`
+
+NetCDF contains multiple `[taxa x size]` matrix variables descibing mean linear extension,
+survival rate and the standard deviation of the linear extension.
+

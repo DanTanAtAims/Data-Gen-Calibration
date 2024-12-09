@@ -162,6 +162,13 @@ coefficients. See the [docs/data_sources.md](https://github.com/DanTanAtAims/Dat
 ### Script
 
 ```julia
+# Create a coral parameter netcdf file based off ecorrap data.
+julia> include("src/ecorrap/extraction.jl")
+```
+
+The following scripts create a variety of plots in the `Outputs/Plots` directory.
+
+```julia
 # growth script
 julia> include("src/ecorrap/growth.jl")
 ```
@@ -169,6 +176,11 @@ julia> include("src/ecorrap/growth.jl")
 ```julia
 # mortality script
 julia> include("src/ecorrap/mortality.jl")
+```
+
+```julia
+# size distribution script
+julia> include("src/ecorrap/size.jl")
 ```
 
 ## Bioregions
