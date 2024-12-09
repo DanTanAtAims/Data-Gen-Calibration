@@ -59,7 +59,7 @@ stdmn_lin_ext = zeros(Float64, 5, 7)
 lin_ext_counts = zeros(Int64, 5, 7)
 
 bins = bin_edges()
-
+@info "Calculating Linear Externsion Values."
 # Iterate over taxa and size classes
 for (idx, df) in enumerate(taxa_dfs)
     for s_idx in 1:7
@@ -94,6 +94,7 @@ taxa_dfs = [
     large_massive_data
 ]
 
+@info "Calculating Survival Rates."
 surv_prob = zeros(Float64, 5, 7)
 surv_count = zeros(Int64, 5, 7)
 
@@ -110,7 +111,7 @@ mb_rate_p = YAXArray(dims, 1 .- surv_prob)
 mb_rate_n = YAXArray(dims, surv_count)
 
 # Fill missing values
-
+@info "Filling missing values"
 # Small massive second size class onwards to match large massives
 mb_rate_p[4, 2:end] .= mb_rate_p[5, 2:end]
 
@@ -144,6 +145,7 @@ filled_ds = Dataset(
     :filled_mb_rate_mean=>mb_rate_p
 )
 
+@info "Saving ecorrap parameters to $(ECORRAP_SAVE_PATH)"
 savedataset(
     filled_ds;
     path=ECORRAP_SAVE_PATH,
