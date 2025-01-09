@@ -436,26 +436,89 @@ function plot_implied_coefficient_survival(
     ]
 
     f = Figure(; size=(1200, 900))
-    ax = Axis(f[1, 1], xlabel="Log Diameter (cm)", ylabel="Scale Coefficient", title=title, limits=(0.0, nothing, 0.0, nothing))
-    lines!(_xs[[1, end]], [1.0, 1.0])
+    ax = Axis(f[1, 1], xlabel="Log Diameter (cm)", ylabel="Scale Coefficient", title=title, limits=(0.0, nothing, -1.0, 1.0))
+    lines!(_xs[[1, end]], [0.0, 0.0])
     plotted_a_location = false
 
     for (nm, r_msk) in zip(row_names, row_masks)
         surv_means, surv_stdevs = calculate_survival(
             df[r_msk, :], windows; count_threshold=count_threshold
         )
-        coefs = surv_means ./ gbr_surv_means
+        coefs = (surv_means .- gbr_surv_means)
 
         non_missing_mask = (!).(ismissing.(coefs))
         xs             = _xs[non_missing_mask]
         coefs  = coefs[non_missing_mask]
+        coefs = coefs ./ (
+            (1 .- gbr_surv_means[non_missing_mask]) .* (coefs .>= 0.0) .+
+            (gbr_surv_means[non_missing_mask] .* (coefs .< 0.0))
+        )
 
         if count(non_missing_mask) == 0
             continue
         end
         plotted_a_location = true
 
-        scatter!(ax, xs, coefs, label=nm)
+        lines!(ax, xs, coefs, label=nm)
+    end
+    if plotted_a_location
+        axislegend(ax)
+    end
+    return f
+end
+
+function calculate_quantile(gbr_mean::Float64, reg_mean::Float64)
+    alpha::Float64 = 2 / (1 - gbr_mean)
+    beta::Float64 = 2 / gbr_mean
+    dist = Beta(alpha, beta)
+    return cdf(dist, reg_mean)
+end
+
+function plot_implied_quantile_survival(
+    df::DataFrame,
+    windows::WIN_TYPE,
+    row_masks,
+    row_names,
+    title::String;
+    count_threshold::Int64=20
+)::Figure
+    gbr_surv_means, gbr_surv_stdevs = calculate_survival(
+        df, windows; count_threshold=count_threshold
+    )
+
+    _xs = [
+        ((lb + ub) / 2) for (lb, ub) in zip(windows[1], windows[2])
+    ]
+
+    f = Figure(; size=(1200, 900))
+    ax = Axis(
+        f[1, 1],
+        xlabel="Log Diameter (cm)",
+        ylabel="Quantile",
+        title=title,
+        limits=(0.0, nothing, 0.0, 1.0)
+    )
+    lines!(_xs[[1, end]], [0.0, 0.0])
+    plotted_a_location = false
+
+    for (nm, r_msk) in zip(row_names, row_masks)
+        surv_means, surv_stdevs = calculate_survival(
+            df[r_msk, :], windows; count_threshold=count_threshold
+        )
+
+        non_missing_mask = (!).(ismissing.(surv_means)) .&& (!).(ismissing.(gbr_surv_means))
+        xs             = _xs[non_missing_mask]
+        quantiles = calculate_quantile.(
+            gbr_surv_means[non_missing_mask],
+            surv_means[non_missing_mask]
+        )
+
+        if count(non_missing_mask) == 0
+            continue
+        end
+        plotted_a_location = true
+
+        lines!(ax, xs, quantiles, label=nm)
     end
     if plotted_a_location
         axislegend(ax)

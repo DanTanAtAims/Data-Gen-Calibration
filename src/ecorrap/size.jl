@@ -10,7 +10,7 @@ using CSV, DataFrames
 
 using CairoMakie
 
-using Statistics
+using Distributions, Statistics
 using ProgressMeter
 
 all_fg_data = get_survival_entries(CSV.read(CORAL_OBS_PATH, DataFrame))
@@ -113,3 +113,17 @@ end
         save(joinpath(OUT_SIZE_DIR, "sites", taxa_name, "log_size_dist_$(site).png"), f)
     end
 end
+
+reef_means = zeros(Float64, 5, length(unique_reefs))
+
+f = Figure()
+ax = Axis(f[1, 1], xlabel="Functional Group", ylabel="Mean Logdiam", title="Mean LogDiam")
+
+@showprogress desc="Calculating size mean" for (r_idx, reef) in enumerate(unique_reefs)
+    for (idx, taxa_df) in enumerate(taxa_dfs)
+        reef_msk = taxa_df.Reef .== reef
+        reef_means[idx, r_idx] = mean(taxa_df[reef_msk, :logdiam])
+        scatter!(ax, 1:5, reef_means[:, r_idx])
+    end
+end
+

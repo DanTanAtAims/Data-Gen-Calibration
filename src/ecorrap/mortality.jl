@@ -12,7 +12,7 @@ using CSV, DataFrames
 
 using CairoMakie
 
-using Statistics
+using Distributions, Statistics
 
 # Get data relating to growth statistics
 mortality_data = get_survival_entries(CSV.read(CORAL_OBS_PATH, DataFrame))
@@ -126,7 +126,7 @@ end
 n_windows = 200
 widths = 0.4
 
-all_taxa_windows = construct_windows(growth_data, :logdiam, widths, n_windows)
+all_taxa_windows = construct_windows(mortality_data, :logdiam, widths, n_windows)
 
 tabular_acropora_win       = construct_windows(tabular_acropora_data,       :logdiam, widths, n_windows)
 corymbose_acropora_win     = construct_windows(corymbose_acropora_data,     :logdiam, widths, n_windows)
@@ -159,7 +159,7 @@ spatial_unique = [unique_clusters, unique_reefs, unique_sites]
 
 for (lvls, lvl_name, loc_nms) in zip(spatial_levels, spatial_cols, spatial_unique)
 
-    growth_spat_masks         = [growth_data[:, lvl_name] .== clst for clst in loc_nms]
+    growth_spat_masks         = [mortality_data[:, lvl_name] .== clst for clst in loc_nms]
     tab_acro_spat_masks       = [tabular_acropora_data[:, lvl_name] .== clst for clst in loc_nms]
     corym_acro_spat_masks     = [corymbose_acropora_data[:, lvl_name] .== clst for clst in loc_nms]
     corym_non_acro_spat_masks = [corymbose_non_acropora_data[:, lvl_name] .== clst for clst in loc_nms]
@@ -177,9 +177,118 @@ for (lvls, lvl_name, loc_nms) in zip(spatial_levels, spatial_cols, spatial_uniqu
     mkpath(joinpath(OUT_PLOT_DIR, "mortality", "survival_$(lvls)"))
 
     for (nm, df, t_win, msks) in zip(taxa_nms, taxa_dfs, taxa_wins, taxa_masks)
-        local f = plot_locs_survival(df, t_win, msks, loc_nms, "$(nm) Survival")
+        local f = plot_locs_survival(df, t_win, msks, loc_nms, "$(nm) Survival"; count_threshold=20)
         save(joinpath(OUT_PLOT_DIR, "mortality", "survival_$(lvls)", "$(nm)_survival_$(lvls).png"), f)
-        local f = plot_implied_coefficient_survival(df, t_win, msks, loc_nms, "$(nm) survival coefficient")
+        local f = plot_implied_coefficient_survival(df, t_win, msks, loc_nms, "$(nm) survival coefficient"; count_threshold=20)
         save(joinpath(OUT_PLOT_DIR, "mortality", "survival_$(lvls)", "$(nm)_survival_coef_$(lvls).png"), f)
+        local f = plot_implied_quantile_survival(df, t_win, msks, loc_nms, "$(nm) survival quantile"; count_threshold=20)
+        save(joinpath(OUT_PLOT_DIR, "mortality", "survival_$(lvls)", "$(nm)_survival_quantile_$(lvls).png"), f)
     end
+end
+
+function apply_scale_coefficient(ys::Vector{Float64}, coef::Float64)::Vector{Float64}
+    if coef >= 0.0
+        return ys .+ (1 .- ys) .* coef
+    else
+        return ys .* (1 + coef)
+    end
+end
+
+function plot_scale_impact()::Figure
+    surv = x -> -1 / (x + 2) + 1
+    xs = 0.0:0.1:30.0
+    ys = surv.(xs)
+    f = Figure()
+    Axis(
+        f[1, 1],
+        xlabel="Size",
+        ylabel="Probability of Survival",
+        title="Application of Survival Coefficients"
+    )
+    lines!(xs, ys, color=:black)
+
+    for coef in -0.3:0.01:0.0
+        lines!(xs, apply_scale_coefficient(ys, coef), color=(:red, 0.3))
+    end
+    for coef in 0.0:0.05:0.5
+        lines!(xs, apply_scale_coefficient(ys, coef), color=(:blue, 0.3))
+    end
+    return f
+end
+
+function plot_constant_scale_impact()::Figure
+    surv = x -> -1 / (x + 2) + 1
+    xs = 0.0:0.1:30.0
+    ys = surv.(xs)
+    f = Figure()
+    Axis(
+        f[1, 1],
+        xlabel="Size",
+        ylabel="Probability of Survival",
+        title="Application of Survival Coefficients"
+    )
+    lines!(xs, ys, color=:black)
+
+    for coef in 0.8:0.01:1.0
+        lines!(xs, coef .* ys, color=(:red, 0.3))
+    end
+    for coef in 1.0:0.025:1.5
+        lines!(xs, coef .* ys, color=(:blue, 0.3))
+    end
+    return f
+end
+
+function beta_quantile_prop(coef::Float64, prop::Float64)::Float64
+    alpha::Float64 = 2 / (1 - prop)
+    beta::Float64 = 2 / prop
+    dist = Beta(alpha, beta)
+    return quantile(dist, coef)
+end
+
+function plot_beta_scale_impact()::Figure
+    surv = x -> -1 / (x + 2) + 1.0
+    xs = 0.0:0.1:30.0
+    ys = surv.(xs)
+    f = Figure()
+    Axis(
+        f[1, 1],
+        xlabel="Size",
+        ylabel="Probability of Survival",
+        title="Application of Survival Coefficients"
+    )
+    lines!(xs, ys, color=:black)
+
+    for coef in 0.1:0.05:0.5
+        lines!(xs, beta_quantile_prop.(coef, ys), color=(:red, 0.4))
+    end
+    for coef in 0.5:0.05:0.90
+        lines!(xs, beta_quantile_prop.(coef, ys), color=(:blue, 0.4))
+    end
+    return f
+end
+
+function calculate_adjusted(prop::Float64, val::Float64, proportion_max::Float64)::Float64
+    width::Float64 = (1 - prop) * proportion_max
+    return prop + width * val
+end
+
+function plot_top_bounded_impact(proportion_max::Float64)::Figure
+    surv = x -> -1 / (x + 2) + 1.0
+    xs = 0.0:0.1:30.0
+    ys = surv.(xs)
+    f = Figure()
+    Axis(
+        f[1, 1],
+        xlabel="Size",
+        ylabel="Probability of Survival",
+        title="Application of Survival Coefficients"
+    )
+    lines!(xs, ys, color=:black)
+    for coef in 0.0:0.05:1.0
+        lines!(xs, calculate_adjusted.(ys, coef, proportion_max), color=(:red, 0.4))
+    end
+    for coef in -1.0:0.05:0.0
+        lines!(xs, calculate_adjusted.(ys, coef, proportion_max), color=(:blue, 0.4))
+    end
+    return f
 end
