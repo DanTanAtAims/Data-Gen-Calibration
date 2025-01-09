@@ -32,6 +32,7 @@ rme_domain_path = ""
 [Location_Classification]
 mpa_geospatial_dir = ""
 aca_geospatial_dir = ""
+waves_ubed90_dir = ""
 outer_shelf_gpkg = ""
 inner_shelf_gpkg = ""
 

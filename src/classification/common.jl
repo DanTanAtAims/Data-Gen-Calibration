@@ -16,6 +16,8 @@ assert_config_key_exists(LOC_CLASS_CONFIG, "mpa_geospatial_dir")
 ACA_GEOSPATIAL_DIR = LOC_CLASS_CONFIG["aca_geospatial_dir"]
 # MPA data is used for all other geospatial data
 MPA_GEOSPATIAL_DIR = LOC_CLASS_CONFIG["mpa_geospatial_dir"]
+# Reprojected Waves Ubed90 data from the Callaghan dataset
+WAVES_UBED90_DIR = LOC_CLASS_CONFIG["waves_ubed90_dir"]
 
 @assert isdir(ACA_GEOSPATIAL_DIR) "ACA geospatial directory not found."
 @assert isdir(MPA_GEOSPATIAL_DIR) "MPA geospatial directory not found."
@@ -38,7 +40,7 @@ BENTHIC_FNS = [
 ]
 
 WAVES_UB_FNS = [
-    joinpath(MPA_GEOSPATIAL_DIR, reg * "_waves_Ub.tif") for reg in REGIONS
+    joinpath(WAVES_UBED90_DIR, reg * "_waves_Ub.tif") for reg in REGIONS
 ]
 WAVES_HS_FNS = [
     joinpath(MPA_GEOSPATIAL_DIR, reg * "_waves_Hs.tif") for reg in REGIONS
