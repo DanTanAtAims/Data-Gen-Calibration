@@ -12,6 +12,8 @@ using CairoMakie
 
 using Statistics
 
+using ADRIA
+
 growth_data = get_growth_entries(CSV.read(CORAL_OBS_PATH, DataFrame))
 
 # Functional group specific data
@@ -110,10 +112,11 @@ end
 mb_rate_p = YAXArray(dims, 1 .- surv_prob)
 mb_rate_n = YAXArray(dims, surv_count)
 
+
 # Fill missing values
 @info "Filling missing values"
 # Small massive second size class onwards to match large massives
-mb_rate_p[4, 2:end] .= mb_rate_p[5, 2:end]
+# mb_rate_p[4, 2:end] .= mb_rate_p[5, 2:end]
 
 # Tabular Acropora largest mb rate 5% less then second largest
 mb_rate_p[1, 7] = mb_rate_p[1, end-1]
@@ -131,12 +134,61 @@ lin_ext_μ[2, 6] = lin_ext_μ[2, 5] .* (lin_ext_μ[1, 6] / lin_ext_μ[1, 5])
 lin_ext_σ[2, 6] = lin_ext_σ[2, 5] .* (lin_ext_σ[1, 6] / lin_ext_σ[1, 5])
 
 # Fill Corymbose non-Acopora with previous size class growth values
-lin_ext_μ[3, 5:6] .= lin_ext_μ[3, 4]
-lin_ext_σ[3, 5:6] .= lin_ext_σ[3, 4]
+lin_ext_μ[3, 6] = lin_ext_μ[3, 4]
+lin_ext_σ[3, 6] = lin_ext_σ[3, 4]
 
 # Fill Small massive with large massives
-lin_ext_μ[4, 2:6] .= lin_ext_μ[5, 2:6]
-lin_ext_σ[4, 2:6] .= lin_ext_σ[5, 2:6]
+# lin_ext_μ[4, 2:6] .= lin_ext_μ[5, 2:6]
+# lin_ext_σ[4, 2:6] .= lin_ext_σ[5, 2:6]
+
+function plot_survival(
+    survival_p::Matrix{Float64}
+)::Figure
+    n_taxa::Int64, n_sizes::Int64 = size(survival_p)
+    taxa_names::Vector{String} = String.(ADRIA.functional_group_names())
+
+    f = Figure(; size=(1200, 900))
+    ax = Axis(
+        f[1, 1],
+        xlabel="Size Class",
+        ylabel="Background Mortality",
+        title="Background Mortality",
+        limits=(nothing, nothing, 0.0, 1.0)
+    )
+
+    for (idx, tnm) in enumerate(taxa_names)
+        scatter!(ax, 1:n_sizes, survival_p[idx, :], label=tnm)
+    end
+    axislegend(ax)
+    return f
+end
+function plot_linear_ext(
+    _lin_ext::Matrix{Float64}
+)::Figure
+    n_taxa::Int64, n_sizes::Int64 = size(_lin_ext)
+    taxa_names::Vector{String} = String.(ADRIA.functional_group_names())
+
+    f = Figure(; size=(1200, 900))
+    ax = Axis(
+        f[1, 1],
+        xlabel="Size Class",
+        ylabel="Linear Extension",
+        title="Linear Extensions.",
+        limits=(nothing, nothing, 0.0, nothing)
+    )
+
+    for (idx, tnm) in enumerate(taxa_names)
+        scatter!(ax, 1:n_sizes, _lin_ext[idx, :], label=tnm)
+    end
+    axislegend(ax)
+
+    return f
+end
+
+f = plot_survival(1 .- mb_rate_p.data[:, :])
+save(joinpath(OUT_PLOT_DIR, "survival_rates.png"), f)
+f = plot_linear_ext(lin_ext_μ.data[:, :])
+save(joinpath(OUT_PLOT_DIR, "lin_ext.png"), f)
 
 filled_ds = Dataset(
     ;

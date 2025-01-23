@@ -124,15 +124,15 @@ for (nm, df) in zip(taxa_nms, taxa_dfs)
 end
 
 n_windows = 200
-widths = 0.4
+_widths = 0.4
 
-all_taxa_windows = construct_windows(mortality_data, :logdiam, widths, n_windows)
+all_taxa_windows = construct_windows(mortality_data, :logdiam, _widths, n_windows)
 
-tabular_acropora_win       = construct_windows(tabular_acropora_data,       :logdiam, widths, n_windows)
-corymbose_acropora_win     = construct_windows(corymbose_acropora_data,     :logdiam, widths, n_windows)
-corymbose_non_acropora_win = construct_windows(corymbose_non_acropora_data, :logdiam, widths, n_windows)
-small_massive_win          = construct_windows(small_massive_data,          :logdiam, widths, n_windows)
-large_massive_win          = construct_windows(large_massive_data,          :logdiam, widths, n_windows)
+tabular_acropora_win       = construct_windows(tabular_acropora_data,       :logdiam, _widths, n_windows)
+corymbose_acropora_win     = construct_windows(corymbose_acropora_data,     :logdiam, _widths, n_windows)
+corymbose_non_acropora_win = construct_windows(corymbose_non_acropora_data, :logdiam, _widths, n_windows)
+small_massive_win          = construct_windows(small_massive_data,          :logdiam, _widths, n_windows)
+large_massive_win          = construct_windows(large_massive_data,          :logdiam, _widths, n_windows)
 
 taxa_wins = [
     tabular_acropora_win,
