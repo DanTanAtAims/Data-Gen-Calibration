@@ -192,8 +192,8 @@ save(joinpath(OUT_PLOT_DIR, "lin_ext.png"), f)
 
 filled_ds = Dataset(
     ;
-    :filled_lin_ext_mean=>lin_ext_μ,
-    :filled_lin_ext_stdev=>lin_ext_σ,
+    :filled_lin_ext_mean=>lin_ext_μ ./ 100,
+    :filled_lin_ext_stdev=>lin_ext_σ ./ 100,
     :filled_mb_rate_mean=>mb_rate_p
 )
 
