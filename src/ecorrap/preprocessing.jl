@@ -23,8 +23,33 @@ related to the calculation of growth statistics and add diameter, log diameter a
 extension columns.
 """
 function get_growth_entries(raw_data::DataFrame)::DataFrame
+    # Maintain compatanility with previous yearly data versions
+    if "GROWTH_USE" in names(raw_data)
+        rename_map = [
+            "GROWTH_USE" => "to_use_for_growth",
+            "SURVIVAL" => "surv",
+            "AREA_T1_SQCM" => "size",
+            "AREA_T2_SQCM" => "sizeNext",
+            "CLUSTER" => "Cluster",
+            "REEF" => "Reef",
+            "SITE" => "Site_UID",
+            "TAXON" => "Taxa"
+        ]
+        rename!(raw_data, rename_map...)
+
+        surv_na_mask = String.(raw_data.surv) .!= "NA"
+        growth_na_mask = String.(raw_data.size) .!= "NA"
+        raw_data = raw_data[surv_na_mask .&& growth_na_mask, :]
+
+        raw_data[!, :surv] .= String.(raw_data.surv)
+        raw_data[!, :surv] .= parse.(Int64, raw_data.surv)
+
+        # Cast sizeNext column to Float64
+        raw_data[!, :size] .= String.(raw_data.size)
+        raw_data[!, :size] .= parse.(Float64, raw_data.size)
+    end
     # Construct masks to remove unused and missing data
-    growth_mask = raw_data.to_use_for_growth .== "yes"
+    growth_mask = raw_data.to_use_for_growth.== "yes"
     survived_mask = raw_data.surv .== 1
     non_missing_size_mask = raw_data.size .!= "NA"
 

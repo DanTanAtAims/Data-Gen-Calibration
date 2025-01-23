@@ -46,6 +46,8 @@ site_counts = [
     count(growth_data.Site_UID .== site_uid) for site_uid in unique_sites
 ]
 
+mkpath(joinpath(OUT_PLOT_DIR, "growth", "site_count_dists"))
+
 f = plot_observation_over_sites(site_counts, "", "site", unique_sites)
 save(joinpath(OUT_PLOT_DIR, "growth", "site_count_dists", "ecorrap_growth_site_barplot.png"), f)
 
@@ -65,6 +67,8 @@ unique_clusters = unique(growth_data.Cluster)
 cluster_counts = [
     count(growth_data.Cluster .== cluster_name) for cluster_name in unique_clusters
 ]
+
+mkpath(joinpath(OUT_PLOT_DIR, "growth", "cluster_count_dists"))
 
 # Plot the distribution of data points across all clusters limited to functional group
 f = plot_observation_over_sites(cluster_counts, "", "Cluster", unique_clusters)
@@ -86,6 +90,8 @@ reef_counts = [
     count(growth_data.Reef .== reef_name) for reef_name in unique_reefs
 ]
 
+mkpath(joinpath(OUT_PLOT_DIR, "growth", "reef_count_dists"))
+
 # Plot the distribution of data points across all clusters limited to functional group
 f = plot_observation_over_sites(reef_counts, "", "Reef", unique_reefs)
 save(joinpath(OUT_PLOT_DIR, "growth", "reef_count_dists", "ecorrap_growth_reef_barplot.png"), f)
@@ -101,8 +107,12 @@ end
 
 # Plot log size distribution
 
+mkpath(joinpath(OUT_PLOT_DIR, "growth", "size_dists"))
+
 f = plot_size_distribution(growth_data.diam, "All Taxa")
 save(joinpath(OUT_PLOT_DIR, "growth", "size_dists", "all_taxa_size_dist.png"), f)
+
+mkpath(joinpath(OUT_PLOT_DIR, "growth", "log_size_dists"))
 
 f = plot_size_distribution(growth_data.logdiam, "All Taxa"; is_log=true)
 save(joinpath(OUT_PLOT_DIR, "growth", "log_size_dists", "all_taxa_size_dist_log.png"), f)
@@ -118,15 +128,15 @@ end
 
 # Take a moving average of linear extension rates
 n_windows = 200
-widths = 0.4
+_widths = 0.4
 
-all_taxa_windows = construct_windows(growth_data, :logdiam, widths, n_windows)
+all_taxa_windows = construct_windows(growth_data, :logdiam, _widths, n_windows)
 
-tabular_acropora_win       = construct_windows(tabular_acropora_data,       :logdiam, widths, n_windows)
-corymbose_acropora_win     = construct_windows(corymbose_acropora_data,     :logdiam, widths, n_windows)
-corymbose_non_acropora_win = construct_windows(corymbose_non_acropora_data, :logdiam, widths, n_windows)
-small_massive_win          = construct_windows(small_massive_data,          :logdiam, widths, n_windows)
-large_massive_win          = construct_windows(large_massive_data,          :logdiam, widths, n_windows)
+tabular_acropora_win       = construct_windows(tabular_acropora_data,       :logdiam, _widths, n_windows)
+corymbose_acropora_win     = construct_windows(corymbose_acropora_data,     :logdiam, _widths, n_windows)
+corymbose_non_acropora_win = construct_windows(corymbose_non_acropora_data, :logdiam, _widths, n_windows)
+small_massive_win          = construct_windows(small_massive_data,          :logdiam, _widths, n_windows)
+large_massive_win          = construct_windows(large_massive_data,          :logdiam, _widths, n_windows)
 
 taxa_wins = [
     tabular_acropora_win,
@@ -135,6 +145,8 @@ taxa_wins = [
     small_massive_win,
     large_massive_win
 ]
+
+mkpath(joinpath(OUT_PLOT_DIR, "growth", "linear_extension"))
 
 
 f = plot_linear_extension(growth_data, all_taxa_windows, "All Taxa Growth Rate")
@@ -167,6 +179,8 @@ for (lvls, lvl_name, loc_nms) in zip(spatial_levels, spatial_cols, spatial_uniqu
         large_massive_spat_masks
     ]
 
+    mkpath(joinpath(OUT_PLOT_DIR, "growth", "linear_extension_$(lvls)"))
+
     for (nm, df, t_win, msks) in zip(taxa_nms, taxa_dfs, taxa_wins, taxa_masks)
         local f = plot_locs_linear_extension(df, t_win, msks, loc_nms, "$(nm) linear extension")
         save(joinpath(OUT_PLOT_DIR, "growth", "linear_extension_$(lvls)", "$(nm)_lin_ext_$(lvls).png"), f)
@@ -174,6 +188,6 @@ for (lvls, lvl_name, loc_nms) in zip(spatial_levels, spatial_cols, spatial_uniqu
         save(joinpath(OUT_PLOT_DIR, "growth", "linear_extension_$(lvls)", "$(nm)_lin_ext_coef_$(lvls).png"), f)
     end
 
-    f = plot_mean_coefficients(taxa_dfs, taxa_wins, taxa_masks, loc_nms, taxa_nms)
+    local f = plot_mean_coefficients(taxa_dfs, taxa_wins, taxa_masks, loc_nms, taxa_nms)
     save(joinpath(OUT_PLOT_DIR, "growth", "linear_extension_$(lvls)", "taxa_lin_ext_coef_$(lvls).png"), f)
 end
