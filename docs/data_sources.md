@@ -36,7 +36,7 @@ Programming. The sampling methodology is described [here](https://www.aims.gov.a
 ## EcoRRAP
 
 1. coral_observation_path - <sup>4</sup>EcoRRAP and Photogrammetry Coral observations found
-   [here](https://github.com/open-AIMS/CoralDemography_EcoRRAP/blob/main/1_AnnaIPMs/1_data/EcoRRAP%20data%20for%20IPM_240630.csv)
+   [here](https://github.com/open-AIMS/CoralDemography_EcoRRAP/blob/main/1_AnnaIPMs/1_data/EcoRRAP%20data%20for%20IPM_250120.csv)
 2. coral_classification_path - <sup>4</sup>Mapping between C~Scape functional groups and
    photogrammetry/EcoRRAP species classification found [here](https://github.com/open-AIMS/CoralDemography_EcoRRAP/blob/main/1_AnnaIPMs/1_data/ecorrap%20to%20cscape%20species.csv)
 
