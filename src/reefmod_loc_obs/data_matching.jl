@@ -1,7 +1,7 @@
 """
 Matching RME reef locations to the manta_tow_data survey results.
 
-Written By Ben Grier.
+Written By Ben Grier and modified by Daniel Tan.
 """
 
 include("common.jl")
@@ -10,6 +10,84 @@ using NetCDF, YAXArrays, CSV, DataFrames, ArchGDAL, Statistics
 import GeoDataFrames as GDF
 import GeoFormatTypes as GFT
 
+function format_canonical_ltmp_id(canonical_ltmp_id::String)::String
+    return uppercase(replace(canonical_ltmp_id, "-" => ""))
+end
+
+function is_same_reef(canonical_id::String, ltmp_id::AbstractString)::Bool
+    formatted_canonical::String = format_canonical_ltmp_id(canonical_id)
+    if formatted_canonical == ltmp_id
+        return true
+    end
+    # find the beginning of the sub-reef indicator
+    canonical_sub_ind = findfirst(isletter, formatted_canonical)
+    canonical_sub_ind = isnothing(
+        canonical_sub_ind
+    ) ? length(formatted_canonical) : canonical_sub_ind
+    ltmp_sub_ind = findfirst(isletter, ltmp_id)
+    ltmp_sub_ind = isnothing(
+        ltmp_sub_ind
+    ) ? length(ltmp_id) : ltmp_sub_ind
+    return formatted_canonical[1:canonical_sub_ind-1] == ltmp_id[1:ltmp_sub_ind-1]
+end
+
+function is_same_sub_reef(canonical_id::String, raw_ltmp_id::AbstractString)::Bool
+    formatted_canonical::String = format_canonical_ltmp_id(canonical_id)
+    if formatted_canonical == raw_ltmp_id
+        return true
+    end
+
+    return isletter(formatted_canonical[end]) && formatted_canonical == raw_ltmp_id[1:end-1]
+end
+
+function is_same_id(canonical_id::String, ltmp_id::AbstractString)::Bool
+    formatted_canonical::String = format_canonical_ltmp_id(canonical_id)
+    return formatted_canonical == ltmp_id
+end
+
+function find_intersection(ltmp::DataFrame, canonical::DataFrame)::DataFrame
+    matched_locs = DataFrame(
+        [Vector{Any}(missing, size(ltmp, 1)) for _ in 1:3],
+        [:REEF_ID, :area_ID, :match_reason])
+    for (x_i, ltmp_row) in enumerate(eachrow(ltmp))
+        for (y_i, canonical_row) in enumerate(eachrow(canonical))
+            if is_same_id(canonical_row.LTMP_ID, ltmp_row.REEF_ID)
+                matched_locs[x_i, :] .= [ltmp_row.REEF_ID, canonical_row.GBRMPA_ID, "Same ID"]
+                break
+            end
+        end
+        # If matched location, stop searching
+        !ismissing(matched_locs[x_i, :REEF_ID]) && continue
+        for (y_i, canonical_row) in enumerate(eachrow(canonical))
+            if ismissing(matched_locs[x_i, 1]) &&
+                is_same_sub_reef(canonical_row.LTMP_ID, ltmp_row.REEF_ID)
+                matched_locs[x_i, :] .= [ltmp_row.REEF_ID, canonical_row.GBRMPA_ID, "Same Sub Reef"]
+                break
+            end
+        end
+        # If matched location, stop searching
+        !ismissing(matched_locs[x_i, :REEF_ID]) && continue
+        for (y_i, canonical_row) in enumerate(eachrow(canonical))
+            if ismissing(matched_locs[x_i, 1]) &&
+                is_same_reef(canonical_row.LTMP_ID, ltmp_row.REEF_ID)
+                matched_locs[x_i, :] .= [ltmp_row.REEF_ID, canonical_row.GBRMPA_ID, "Same Reef"]
+                break
+            end
+        end
+        # If matched location, stop searching
+        !ismissing(matched_locs[x_i, :REEF_ID]) && continue
+        dists = [
+            ArchGDAL.distance(ltmp_row.geometry, canon_geom)
+            for canon_geom in canonical.geometry
+        ]
+        closest = argmin(dists)
+        # Check closest location is within 1 km
+        if dists[closest] * 111.1 < 1.0
+            matched_locs[x_i, :] = [ltmp_row.REEF_ID, canonical.GBRMPA_ID[closest], "Closest Reef"]
+        end
+    end
+    return matched_locs
+end
 """
     find_intersections(
         x::DataFrame,
@@ -65,7 +143,10 @@ function find_intersections(
             )
 
             for (y_i, interest_area) in enumerate(eachrow(y))
-                if ArchGDAL.intersects(reef_poly.geometry, interest_area[y_geom_col])
+                same_id::Bool = is_same_id(interest_area[y_id], String(reef_poly[x_id]))
+                if same_id
+                    data = [reef_poly[x_id], interest_area[y_id], 0.0]
+                elseif ArchGDAL.intersects(reef_poly.geometry, interest_area[y_geom_col])
                     inter_area = ArchGDAL.intersection(
                         reef_poly.geometry, interest_area[y_geom_col]
                     )
@@ -110,7 +191,6 @@ function find_intersections(
                 max_inter_area = argmax(intersecting.inter_area)
                 x_data = [intersecting[max_inter_area, x_id], intersecting[max_inter_area, :area_ID]]
             end
-
             rel_areas[x_i, :] = x_data
         end
 

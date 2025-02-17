@@ -26,14 +26,17 @@ for row in eachrow(manta_tow_reefs)
     ArchGDAL.addpoint!(row.geometry, row.LONGITUDE, row.LATITUDE)
 end
 
-matching_labels = find_intersections(manta_tow_reefs, rme_reefs, :REEF_ID, :GBRMPA_ID, "km", 1; nearest=true)
+# matching_labels = find_intersections(manta_tow_reefs, rme_reefs, :REEF_ID, :GBRMPA_ID, "km", 1; nearest=true)
+matching_labels = find_intersection(manta_tow_reefs, rme_reefs)
 rename!(matching_labels, :area_ID => :GBRMPA_ID)
 
 manta_tow_reefs = leftjoin(manta_tow_reefs, matching_labels; on=:REEF_ID, order=:left)
-manta_LC_df = leftjoin(manta_LC_df, manta_tow_reefs[:, [:REEF_ID, :GBRMPA_ID, :geometry]], on=:REEF_ID, order=:left)
+manta_LC_df = leftjoin(manta_LC_df, manta_tow_reefs[:, [:REEF_ID, :GBRMPA_ID, :geometry, :match_reason]], on=:REEF_ID, order=:left)
 manta_LC_df = leftjoin(manta_LC_df, rme_reefs[:, [:GBRMPA_ID, :RME_UNIQUE_ID]], on=:GBRMPA_ID, order=:left, matchmissing=:notequal)
-select!(manta_LC_df, [:REEF_ID, :GBRMPA_ID, :RME_UNIQUE_ID], Not([:REEF_ID, :GBRMPA_ID, :RME_UNIQUE_ID]))
+reorder_cols = [:geometry, :REEF_ID, :GBRMPA_ID, :RME_UNIQUE_ID, :match_reason]
+select!(manta_LC_df, reorder_cols, Not(reorder_cols))
 manta_LC_df.GBRMPA_ID = Vector{Union{Missing, String}}(manta_LC_df.GBRMPA_ID)
+manta_LC_df.match_reason = Vector{Union{Missing, String}}(manta_LC_df.match_reason)
 
 @info "Writing LTMP Manta Tow Coral Observations At ReefMod Locations to $(OUT_RME_MANTA)"
 GDF.write(OUT_RME_MANTA, manta_LC_df; crs=GFT.EPSG(4326))

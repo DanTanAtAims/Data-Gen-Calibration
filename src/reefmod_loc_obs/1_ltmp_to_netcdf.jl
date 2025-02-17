@@ -1,3 +1,9 @@
+"""
+To do: Ultimately this script should be merged with the other scripts to remove of the 
+intermediate netcdfs.
+"""
+
+
 include("common.jl")
 using CSV,
     Dates,
